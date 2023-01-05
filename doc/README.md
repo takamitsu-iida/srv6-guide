@@ -89,9 +89,7 @@ SRv6においてSIDはIPv6のアドレス形式と同じ形を利用します。
 
 <br>
 
-## SRv6を利用する上でのネットワーク構成の考え方
-
-- ファブリックネットワーク
+## SRv6のネットワーク構成の考え方
 
 ネットワーク全体をパケットの中継を行うファブリックとして考えるのがファブリックネットワークです。
 
@@ -158,17 +156,17 @@ iBGPはフルメッシュでピアリングしなければいけませんので�
 
 <br>
 
-## SIDの採番
+## セグメントIDの採番
 
 ルータは２つの機能を必ず持っています。
 
 1. 自分宛の通信を処理する機能
 2. 隣接する装置にパケットを中継する機能
 
-IPネットワークを設計するときのベストプラクティスでは、
-すべてのルータにループバックインタフェースを作成して、装置を代表するIPアドレスをそのループバックに割り当てます。
+IPネットワークを設計するときのベストプラクティスでは、すべてのルータにループバックインタフェースを作成して、装置を代表するIPアドレスをそのループバックに割り当てます。
 IPv4であれば/32、IPv6であれば/128のアドレスをループバックに割り当てて、動的ルーティングでその情報を配信します。
 ルータそのものへの通信、たとえばiBGPでピアリングするときのアドレスや、NTPサーバとして振る舞うときのアドレスにはこのアドレスを利用します。
+
 SRv6において、自装置宛の通信を処理する機能にEndという名称が付与されており、SIDの採番対象となっています。
 
 したがって、
@@ -183,31 +181,30 @@ SRv6において、自装置宛の通信を処理する機能にEndという名�
 
 ルータのどの機能にどのSIDを割り当てるか、その方法は大きく分類すると２通りで、一つは人間が決める方法、もう一つは動的に決める方法です。
 
-Endは装置を代表するSIDですから、人間が静的に決めたほうが管理の観点でメリットが大きいです。
+Endは装置を代表するSIDですから、なるべく固定的に採番した方が管理の観点でメリットが大きいです。
 
 End.Xは隣接ノードを見つけたときに自動で決めたほうがいいでしょう。
 隣接ノードは障害の発生や構成変更で常に存在するとは限りませんので、見つけ次第、自動で採番する方が理にかなっています。
 
 <br>
 
-## SRv6のセグメントID形式
+## セグメントIDの形式
 
 SRv6のセグメントIDはIPv6アドレスと同じ形式を取ります。
-
 IPv6では前半64ビットがネットワーク部、後半64ビットがホスト部になっていますが、SRv6では前半をLocator（ロケータ）、後半をFunction（ファンクション）と呼びます。
 
 ![fig_5](img/fig_5.drawio.svg)
 
 SRv6のロケータはさらにブロック部とノード部に分かれます。通常ブロック部は40ビット、ノード部は24ビットです。
-
+（40ビットというと32の倍数はないので、IPv6のアドレス表記とは相性が悪いのですが、仕方ありません）。
 SRv6を構成するネットワーク内でブロック部は共通にします。
 
 たとえば 2001:0db8:: を例に考えてみます。
 
-先頭の40ビットはブロック部になりますので、全ルータの全てのロケータで共通にします。
-ここではブロック部を 2001:0db8:00 としてみます（40ビットの番号をIPv6の形式で表記すると見栄えが悪いのですが仕方ありません）。
+先頭の40ビットはブロック部になりますので、全ルータのロケータで共通にします。
+ここではブロック部を 2001:0db8:00 としてみます（16進表記のXXが5個で40ビットです）。
 
-ノード部はルータごとに変わります。ノード部の下1オクテットを1から連番で割り当てるなら、各装置のロケータはこうなります。
+ノード部はルータごとに変わります。ノード部を1から連番で割り当てるなら、各装置のロケータはこうなります。
 
 - R1のロケータは 2001:0db8:00 + 00:0001
 - R2のロケータは 2001:0db8:00 + 00:0002
@@ -238,9 +235,11 @@ locator a 2001:0db8:0000:1::/64
 ```
 
 
+<br>
+
 ## ファンクション部
 
-Function（ファンクション）はルータがセグメントIDを採番する対象の機能です。
+Function（ファンクション）はルータがセグメントIDを採番する対象機能です。
 
 FunctionはRFC8986で標準化されていますので、ここからはその呼び方を使います。
 
@@ -262,11 +261,55 @@ FunctionはRFC8986で標準化されていますので、ここからはその�
 </dl>
 
 
-### End.X
+<br>
 
-End.Xは転送に利用する。
+## ファンクション部への採番
 
-次に転送する先のインタフェースとIPv6アドレスが分かる。
+人間が決めた値を静的に設定する方法と、動的に自動採番する方法があります。
+
+静的に決める範囲は、上位1オクテットのうち 0x00 - 0x3f まで、合計64個としている実装が多いようです。
+この場合、動的に決まるSIDは0x40以降になります。
+
+FITELnet機器で固定で設定するのであれば、次の設定を使います。
+
+```bash
+local-sid <SID> action end
+```
+
+<br>
+
+### Endファンクション
+
+Endファンクションはそのルータ自身宛ての通信を処理する機能ですから、そのルータを代表するSIDです。
+装置を代表するIPv6アドレスと、装置を代表するSIDは同じものにしておくとよいでしょう。
+そのためには、SIDを静的に設定するのではなく、ループバック割り当てるIPv6アドレスをロケータの中から採番します。
+
+たとえばR1のロケータが 2001:0db8:0:1::/64 だったとして、ループバックには2001:0db8:0:1::1/128を割り当てます。
+（もちろん下1オクテットは1でなくても構いません）。
+
+ISISはSRv6のロケータ情報を配信しますので、個別に/128のconnected経路を配信する必要はありません。
+
+<br>
+
+### End.Xファンクション
+
+End.Xは隣接ノードにパケットを転送する機能です。
+
+これはISISが隣接ノードを見つけたら自動で採番してくれます。
+
+固定でEnd.XのSIDを設定するなら次のコマンドを使いますが、隣接ノードのIPv6アドレスが必要になります。
+ややこしいのでやめたほうがいいでしょう。
+
+```bash
+local-sid <SID> action end.x <送信インターフェイス名> <Next-hop> [psp]
+```
+
+FITELnetの機器でSIDを確認してみると、End.Xに対してはISISが動的に採番していることがわかります。
+
+> **note**
+>
+> FITELnetはLLDPやCDPがないのですが、SRv6のEnd.Xの情報から隣接機器のIPv6アドレスを知ることができます。
+
 
 ```bash
 fx201-p#show segment-routing srv6 sid detail
@@ -287,18 +330,13 @@ SID                         Function     Context                                
   Created : Wed Dec 14 18:11:20 2022 (02w5d16h ago)
 ```
 
-固定でSIDを作るには次のコマンドを使う。
+<br>
 
-```bash
-local-sid <SID> action end.x <送信インターフェイス名> <Next-hop> [psp]
-```
+## End.DT4ファンクション
 
+L3VPNなのでiBGPを使ってエッジルータ同士で情報を交換します。
 
-## End.DT4
-
-L3VPNなのでiBGPを使ってエッジルータ同士が情報交換する。
-
-このとき交換するのはロケータの情報と **ラベル** の情報。昔ながらのMPLS-VPNの仕組みをそのまま流用している。
+iBGPで交換している情報は、ロケータと **ラベル** の情報です。昔からあるMPLS-VPNの仕組みをそのまま流用しているためです。
 
 L3VPNの情報はshow ip bgp vpnv4 all で確認できる。
 
@@ -672,3 +710,41 @@ pyATSを使って各種操作を自動化する。
 - path-tracing の実装
 - API(RESTCONF/YANGモデル)の実装
 - gRPCを使ったdial-in/outでのテレメトリ送信
+
+
+
+
+<br><br><br><br>
+
+## RFC
+
+Architecture
+
+RFC 8402 Segment Routing Architecture
+RFC 8754 RFC 8754 - IPv6 Segment Routing Header (SRH)
+RFC 7855 Source Packet Routing in Networking (SPRING) Problem Statement and Requirements
+RFC 8660 Segment Routing with MPLS data plane
+
+ISIS
+
+RFC 8667 IS-IS Extensions for Segment Routing
+RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS
+RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS
+RFC 7810 IS-IS Traffic Engineering (TE) Metric Extensions
+
+BGP
+
+RFC 8669 Segment Routing Prefix SID extensions for BGP
+RFC 8571 BGP-LS Advertisement of IGP Traffic Engineering Performance Metric Extensions
+
+OSPF
+
+RFC 8665 OSPF Extensions for Segment Routing
+RFC 8666 OSPFv3 Extensions for Segment Routing
+RFC 8476 Signaling MSD (Maximum SID Depth) using OSPF
+RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions
+
+OAM
+
+RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System
+RFC 8287 Label Switched Path (LSP) Ping/Trace for Segment Routing Networks Using MPLS Dataplane
