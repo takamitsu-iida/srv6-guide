@@ -1,13 +1,13 @@
 
 # SRv6
 
-SRv6 = Segment Routing over IPv6 dataplane
+https://www.segment-routing.net/
+
+SRv6 = **S**egment **R**outing over IP**v6** dataplane
 
 A source-routing architecture that seeks the right balance between distributed intelligence and centralized optimization.
 
 （分散インテリジェンスと集中最適化の間の適切なバランスを追求するソース ルーティング アーキテクチャ。Google翻訳）
-
-https://www.segment-routing.net/
 
 
 ## ひとことでいうと
@@ -16,7 +16,26 @@ https://www.segment-routing.net/
 
 受信した装置が途中経路と出口を指定できるので、ソースルーティングの一種になります。
 
-## ○○ではない
+
+![fig_1](fig_1.drawio.svg)
+
+R1に着信したパケットがR4から出ていくことを考えます。
+
+IPネットワークの動的ルーティングでは、最短コストに従ってルーティングされますので、コスト設計をどれだけ頑張っても
+
+- R1-R2-R4
+- R1-R3-R4
+- R1-R2-R3-R4
+- R1-R3-R2-R4
+
+の通り道しか実現できません。
+
+SRv6の場合は、着信したR1がどこを通したいかを制御できますので、R1-R2-R3-R2-R4のような通り道も実現可能です。
+
+R3が特別な役割、たとえばフィルタリングやパケットの中身を精査する機能を持っていて、一度そこを通してから外に出したい場合に使えそうです。
+
+
+## SRv6は○○ではない
 
 **ルーティングプロトコルではありません**。
 

@@ -1,6 +1,6 @@
 # SRv6関連情報まとめ
 
-[SRv6とは](SRv6.md)
+[SRv6とは](doc/README.md)
 
 
-# SRv6ネットワーク設計
+[SRv6ネットワーク設計](design/README.md)
