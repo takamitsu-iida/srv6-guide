@@ -9,6 +9,7 @@ A source-routing architecture that seeks the right balance between distributed i
 
 （分散インテリジェンスと集中最適化の間の適切なバランスを追求するソース ルーティング アーキテクチャ。Google翻訳）
 
+<br>
 
 ## ひとことでいうと
 
@@ -34,6 +35,7 @@ SRv6の場合は、着信したR1がどこを通したいかを制御できま�
 
 R3が特別な役割、たとえばフィルタリングやパケットの中身を精査する機能を持っていて、一度そこを通してから外に出したい場合に使えそうです。
 
+<br>
 
 ## SRv6は○○ではない
 
