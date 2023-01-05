@@ -17,7 +17,7 @@ A source-routing architecture that seeks the right balance between distributed i
 受信した装置が途中経路と出口を指定できるので、ソースルーティングの一種になります。
 
 
-![fig_1](fig_1.drawio.svg)
+![fig_1](img/fig_1.drawio.svg)
 
 R1に着信したパケットがR4から出ていくことを考えます。
 
