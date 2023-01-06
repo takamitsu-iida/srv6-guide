@@ -128,7 +128,7 @@ SRv6とSR-MPLSは現在主流になっているACIやMPLS/BGP VPNよりも、よ
 一方で、SRv6にコントローラはありません。
 各装置が自律的に動作する分散型のアーキテクチャを採用した、コントローラが存在しないファブリック型ネットワークと言ってよいでしょう。
 
-> **note**
+> **Note**
 > SRv6において、機器を管理するコントローラは存在しませんが、経路計算を1台の装置に集約にすることはできます。
 
 <br>
@@ -171,9 +171,13 @@ SRv6において、自装置宛の通信を処理する機能にEndという名�
 
 したがって、
 
-装置を代表するアドレス = ループバックインタフェースのIPアドレス = SRv6のEnd SID
+- 装置を代表するアドレス = ループバックインタフェースのIPアドレス
+- 装置を代表するSID = SRv6のEnd SID
 
 と考えてよいでしょう。
+
+> **Note**
+> 装置を代表するSIDをノードSID(Node-SID)と呼びます。
 
 ルータは自足のインタフェースの先にいるノードにパケットを中継します。
 すべてのルータがこの動作をすることで、ホップバイホップでパケットが中継されていくわけですが、SRv6ではこの機能にEnd.Xという名称を付与しています。
@@ -196,12 +200,12 @@ IPv6では前半64ビットがネットワーク部、後半64ビットがホス
 ![fig_5](img/fig_5.drawio.svg)
 
 SRv6のロケータはさらにブロック部とノード部に分かれます。通常ブロック部は40ビット、ノード部は24ビットです。
-（40ビットというと32の倍数はないので、IPv6のアドレス表記とは相性が悪いのですが、仕方ありません）。
+（40ビットというと16の倍数ではないので、IPv6のアドレス表記とは相性が悪いのですが、仕方ありません）。
 SRv6を構成するネットワーク内でブロック部は共通にします。
 
-たとえば 2001:0db8:: を例に考えてみます。
+たとえば 2001:0db8::/32 を例に考えてみます。
 
-先頭の40ビットはブロック部になりますので、全ルータのロケータで共通にします。
+先頭の40ビットはブロック部になりますので、全てのルータのロケータで共通にします。
 ここではブロック部を 2001:0db8:00 としてみます（16進表記のXXが5個で40ビットです）。
 
 ノード部はルータごとに変わります。ノード部を1から連番で割り当てるなら、各装置のロケータはこうなります。
@@ -227,13 +231,9 @@ segment-routing
 !
 ```
 
-FITELnetの設定イメージではこうなります。
-
-```bash
-segment-routing srv6
-locator a 2001:0db8:0000:1::/64
-```
-
+> **Note**
+> aはロケータに付与した名前です。
+> FlexAlgoを導入するとロケータは複数必要になりますので、名前付けのルールも意識しておいた方がいいかもしれません。
 
 <br>
 
@@ -247,7 +247,25 @@ FunctionはRFC8986で標準化されていますので、ここからはその�
 >
 > RFC8986 Segment Routing over IPv6 (SRv6) Network Programming
 
-よく目にするFunctionはこれら。
+| ファンクション  |  説明  |
+| -------------- | ---- |
+| End               | エンドポイント |
+| End.X             | L3クロスコネクトのエンドポイント<br>Adj-SIDと呼びます |
+| End.T             | 特定のIPv6テーブルをルックアップするエンドポイント |
+| End.DX6           | カプセル化を解除してIPv6クロスコネクトを行うエンドポイント<br>IPv4 L3VPN per-CE |
+| End.DX4           | カプセル化を解除してIPv4クロスコネクトを行うエンドポイント<br>IPv4 L3VPN per-CE |
+| End.DT6           | カプセル化を解除して特定のIPv6テーブルをルックアップするエンドポイント<br>IPv6 L3VPN per-VRF |
+| End.DT4           | カプセル化を解除して特定のIPv4テーブルをルックアップするエンドポイント<br>IPv4 L3VPN per-VRF |
+| End.DT46          | カプセル化を解除して特定のIPテーブルをルックアップするエンドポイント<br>L3VPN per-VRF |
+| End.DX2           | カプセル化を解除してL2クロスコネクトを行うエンドポイント<br>L2VPN |
+| End.DX2V          | カプセル化を解除してVLAN L2テーブルをルックアップするエンドポイント<br>EVPN Flexible Cross-connect |
+| End.DT2U          | カプセル化を解除してユニキャストMAC L2テーブルをルックアップするエンドポイント<br>EVPN Bridging Unicast |
+| End.DT2M          | カプセル化を解除してL2テーブルでフラッディングするエンドポイント<br>EVPN Bridging BUM |
+| End.B6.Encaps     | カプセル化を伴うSRv6 Policyに紐付けられたエンドポイント<br>Binding SID |
+| End.B6.Encaps.Red | End.B6.Encaps with reduced SRH |
+| End.BM            | SR-MPLS Policyに紐付けられたエンドポイント |
+
+たくさんありますが、よく目にするFunctionはこれらです。
 
 <dl>
     <dt>End</dt>
@@ -263,18 +281,12 @@ FunctionはRFC8986で標準化されていますので、ここからはその�
 
 <br>
 
-## ファンクション部への採番
+## ファンクション部へのSIDの採番
 
-人間が決めた値を静的に設定する方法と、動的に自動採番する方法があります。
+人間が決めた値を静的に設定する方法と、プロトコルが動的に採番する方法があります。
 
 静的に決める範囲は、上位1オクテットのうち 0x00 - 0x3f まで、合計64個としている実装が多いようです。
 この場合、動的に決まるSIDは0x40以降になります。
-
-FITELnet機器で固定で設定するのであれば、次の設定を使います。
-
-```bash
-local-sid <SID> action end
-```
 
 <br>
 
@@ -282,12 +294,14 @@ local-sid <SID> action end
 
 Endファンクションはそのルータ自身宛ての通信を処理する機能ですから、そのルータを代表するSIDです。
 装置を代表するIPv6アドレスと、装置を代表するSIDは同じものにしておくとよいでしょう。
-そのためには、SIDを静的に設定するのではなく、ループバック割り当てるIPv6アドレスをロケータの中から採番します。
+そのためには、ループバックに割り当てるIPv6アドレスをロケータの中から採番します。
 
 たとえばR1のロケータが 2001:0db8:0:1::/64 だったとして、ループバックには2001:0db8:0:1::1/128を割り当てます。
-（もちろん下1オクテットは1でなくても構いません）。
 
-ISISはSRv6のロケータ情報を配信しますので、個別に/128のconnected経路を配信する必要はありません。
+> **Note**
+> SRv6を構成するルータのLoopbackのIPv6アドレスは {locator}::1/128 とする、といった具合にルール化しておくとよいと思います。
+
+ISISはSRv6のロケータ情報を配信しますので、Loopbackのconnected経路を配信する必要はありません。
 
 <br>
 
@@ -295,21 +309,27 @@ ISISはSRv6のロケータ情報を配信しますので、個別に/128のconne
 
 End.Xは隣接ノードにパケットを転送する機能です。
 
-これはISISが隣接ノードを見つけたら自動で採番してくれます。
-
-固定でEnd.XのSIDを設定するなら次のコマンドを使いますが、隣接ノードのIPv6アドレスが必要になります。
-ややこしいのでやめたほうがいいでしょう。
+FITELnetの機器でEnd.XのSIDを静的に設定するなら次のコマンドを使います。
 
 ```bash
 local-sid <SID> action end.x <送信インターフェイス名> <Next-hop> [psp]
 ```
 
-FITELnetの機器でSIDを確認してみると、End.Xに対してはISISが動的に採番していることがわかります。
+コマンドの引数にある<Next-hop>は隣接ノードのIPv6アドレスです。
+事前に調べておかないと設定できませんし、その隣接ノードが常時存在するとも限りません。
 
-> **note**
->
-> FITELnetはLLDPやCDPがないのですが、SRv6のEnd.Xの情報から隣接機器のIPv6アドレスを知ることができます。
+End.XはISISを使って動的に決めたほうがよいでしょう。
 
+ISISをSRv6に対応させるには、次の設定を使います。
+
+FITELnetの場合
+
+```bash
+Router(config)# router isis core
+Router(config-isis core)# srv6 locator a
+```
+
+この設定をするだけでロケータ a の中からEnd.XのSIDを自動採番してくれます。
 
 ```bash
 fx201-p#show segment-routing srv6 sid detail
@@ -330,274 +350,90 @@ SID                         Function     Context                                
   Created : Wed Dec 14 18:11:20 2022 (02w5d16h ago)
 ```
 
+
+> **Note**
+> FITELnetはLLDPやCDPがないのですが、SRv6のEnd.Xの情報から隣接機器のIPv6アドレスを知ることができます。
+
+
 <br>
 
-## End.DT4ファンクション
+## End.DT4 End.DT6ファンクション
 
-L3VPNなのでiBGPを使ってエッジルータ同士で情報を交換します。
+End.DT4は自装置の中にあるL3VPN(VRF)宛てのIPv4通信を処理する機能です。
+End.DT6はVRF宛てのIPv6通信を処理する機能です。
 
-iBGPで交換している情報は、ロケータと **ラベル** の情報です。昔からあるMPLS-VPNの仕組みをそのまま流用しているためです。
+同じVRFの先に複数のCEルータがつながるケースがあります。
+VRF単位にファンクションを割り当てるか、CE装置単位にファンクションを割り当てるか、選択できます。
 
-L3VPNの情報はshow ip bgp vpnv4 all で確認できる。
+> **Note**
+> FITELnetのデフォルト動作はVRF単位です。
 
-```
-fx201-pe1#show ip bgp vpnv4 all 220.0.1.0
+このVPNの通信はこの経路を通るようにしたい、といった特別な経路制御をかけたい場合はSIDを静的に設定するのもありだと思います。
 
-Route Distinguisher: 1:1 (1)
-BGP routing table entry for 220.0.1.0/24
-  Not advertised to any peer
-  Local
-    3ffe:220:1::1 (metric 30) from 3ffe:220:1::1 (220.0.0.1)
-      Origin incomplete, metric 0, localpref 100, valid, internal, best, installed
-      Extended Community: RT:1:1
-      Original RD:1:1
-      BGP Prefix-SID: SRv6 L3VPN 3ffe:220:1:1:: (L:40.24, F:16.0, T:16.64) End.DT4
-      Local Label: no label
-      Remote Label: 1120
-      Path Identifier (Remote/Local): /0
-      Last update: Wed Dec 14 18:05:34 2022
+FITELnetではこのように設定します。
+
+```bash
+local-sid <SID> action {end.dt4|end.dt6} [vrf <VRF>]
 ```
 
-`BGP Prefix-SID: SRv6 L3VPN 3ffe:220:1:1:: (L:40.24, F:16.0, T:16.64) End.DT4`
+引数でVRFを指定しますので、順番的にはVRFを先に作成して、その後SIDを割り当てることになります。
 
-という部分に注目。Prefix-SIDはロケータのことで、ルータそのものを指す。
+動的にSIDを決めるのであれば、VRFの設定に対して、どのロケータから採番するかを定義します。
 
-`3ffe:220:1:1::` は対向するPEルータ、つまりこの情報を教えてくれたルータを指している。
+FITELnetでの設定はこのようにします。
 
-- L:40.24 の意味
-
-> マニュアルから引用
-> SRv6 SID Structure Sub-Sub-TLV の LocBlock len, LocNode len を示しています
-
-ロケータのBlock部が40ビット、Node部が24ビットという意味。2つ合わせて40+24=64ビットがロケータの長さ。
-どのメーカーのSRv6ルータでもこうなっているはず。
-
-- F:16.0 の意味
-
-> マニュアルから引用
-> SRv6 SID Structure Sub-Sub-TLV の Function len, Argument len を示しています
-
-Function部の長さが16ビット、引数となるArgumentの長さが0ビット、という意味。2つ合わせて16+0=16ビットがFunction部の長さ。
-この部分はメーカーによって違うかもしれない。
-
-- T:16.64 の意味
-
-> マニュアルから引用
-> SRv6 SID Structure Sub-Sub-TLV の Trans len, Trans Offset を示しています
-
-RFC9252(BGP Overlay Services Based on Segment Routing over IPv6) を読まないと、この意味はわからない。
-
-RFC9252から引用。
-
-```
-   Transposition Length (1 octet):
-      This field is the size in bits for the part of the SID that has
-      been transposed (or shifted) into an MPLS Label field.
-
-   Transposition Offset (1 octet):
-      This field is the offset position in bits for the part of the SID
-      that has been transposed (or shifted) into an MPLS Label field.
+```bash
+Router(config)# ip vrf VRF1
+Router(config-vrf VRF1)# segment-routing srv6 locator a
 ```
 
-BGPを使ってVPNの経路情報を交換するときには、VPNを識別する情報としてMPLSのラベルを付与する。
+自装置のVRFに対して割り当てたSIDの情報は、iBGPを使って自分以外のエッジルータに配信します。
 
-MPLSのラベルの長さは20ビット。
+> **Note**
+> 実際にiBGPで交換している情報は、ロケータと **ラベル** の情報です。
+> 昔からあるMPLS-VPNの仕組みをそのまま流用しているためです。
+> 当然ですが、ラベルからSID、SIDからラベルに変換できます。
 
-セグメントIDの長さは128ビット。
 
-当然収まりきらないので工夫して格納する。ここがすごく分かりづらいところ。
+<br>
 
-128ビットのSIDのうち、どの部分からどの部分までを20ビットのラベル部に格納したのかを表すのがTrans lenとTrans Offset。
+## SIDのルーティングテーブルはある？
 
-T:16.64は、SIDの先頭64ビットから16ビットを切り出したもの、という意味になる。これはちょうどFunction部を表している。
+自装置の中で割り当てたSIDの情報は次のshowコマンドで確認できます。
 
-- Remote Label: 1120 の意味
+FITELnetの場合。
 
-対向ルータが送ってきたラベルの値のこと。
-
-10進数の `1120` は16進数では `0x 0460`、2進数では `0b 0000 0100 0110 0000` になる。
-
-20ビットの器に入っているので正確には `0x 00460` = `0b 0000 0000 0100 0110 0000` となる。
-
-T:16.64と指定された通り、128ビットのSIDの先頭64ビットから16ビット分がここに格納されていることになるので、先頭から16ビット分を取り出す。
-すなわち下4ビットを破棄すると、2進数で `0000 0000 0100 0110`、16進数で`0x0046` となる。
-
-IPv6のアドレスは連続するゼロを省略するのでFunction部は`0x46`ということになる。
-
-ロケータとラベル情報からSIDを組み立てると、ロケータの`3ffe:220:1:1::`にラベルの`0x46`を連結して`3ffe:220:1:1:46::`がEnd.DT4のSIDになる。
-
-IOS-XRの場合。
-
-```
-RP/0/RP0/CPU0:PE04#show bgp vrf vrf1 192.168.5.0/24
-Thu Dec 15 14:26:10.464 JST
-BGP routing table entry for 192.168.5.0/24, Route Distinguisher: 100:1
-Versions:
-  Process           bRIB/RIB  SendTblVer
-  Speaker                  31           31
-Last Modified: Dec 15 14:23:30.905 for 00:02:39
-Paths: (2 available, best #1)
-  Advertised to CE peers (in unique update groups):
-    192.168.6.6
-  Path #1: Received by speaker 0
-  Advertised to CE peers (in unique update groups):
-    192.168.6.6
-  65005
-    2001:db8::3 (metric 30) from 2001:db8::1 (192.168.255.3)
-      Received Label 0x420
-      Origin IGP, metric 0, localpref 100, valid, internal, best, group-best, import-candidate, imported
-      Received Path ID 0, Local Path ID 1, version 31
-      Extended community: RT:100:1
-      Originator: 192.168.255.3, Cluster list: 0.0.0.1
-      PSID-Type:L3, SubTLV Count:1
-       SubTLV:
-        T:1(Sid information), Sid:2001:db8:0:3::, Behavior:19, SS-TLV Count:1
-         SubSubTLV:
-          T:1(Sid structure):
-      Source AFI: VPNv4 Unicast, Source VRF: vrf1, Source Route Distinguisher: 100:1
+```bash
+show segment-routing srv6 sid
 ```
 
-Trans LenとTrans Offsetが不明だが、おそらくFITELnetと同じでT:16.64のはず。
-
-`Received Label 0x420` からこのプレフィクスに紐づいたラベル値は0x420 = 0x00420であることがわかる。
-
-頭から16ビット分を取り出す、すなわち下4ビットを破棄して0x0042がFunction部ということになる。
-
-`T:1(Sid information), Sid:2001:db8:0:3::, Behavior:19, SS-TLV Count:1` からロケータは2001:db8:0:3であることがわかる。
-
-ロケータとラベルの情報から、この経路に紐づくSIDは `2001:db8:0:3:42` となる。
-
-
-RFC9252 BGP Overlay Services Based on Segment Routing over IPv6 (SRv6)
-
-```
-5.1.  IPv4 VPN over SRv6 Core
-
-   The MP_REACH_NLRI over SRv6 core is encoded according to IPv4 VPN
-   unicast over IPv6 core defined in [RFC8950].
-
-   The label field of IPv4-VPN NLRI is encoded as specified in [RFC8277]
-   with the 20-bit Label Value set to the whole or a portion of the
-   Function part of the SRv6 SID when the Transposition Scheme of
-   encoding (Section 4) is used; otherwise, it is set to Implicit NULL.
-   When using the Transposition Scheme, the Transposition Length MUST be
-   less than or equal to 20 and less than or equal to the FL.
-
-   The SRv6 Service SID is encoded as part of the SRv6 L3 Service TLV.
-   The SRv6 Endpoint Behavior SHOULD be one of these: End.DX4, End.DT4,
-   or End.DT46.
+```bash
+Router# show segment-routing srv6 sid
+SID Function Context Owner State
+-------------------------- ----------- -------------------------------------------------- ----- ---------
+2001:db8:0:45:40:: End IS-IS InUse
+2001:db8:0:45:41:: End (PSP) IS-IS InUse
+2001:db8:0:45:42:: End.X [Port-channel 21, Link-Local] IS-IS InUse
+2001:db8:0:45:43:: End.X (PSP) [Port-channel 21, Link-Local] IS-IS InUse
+2001:db8:0:45:44:: End.DT4 'VRF1' BGP InUse
 ```
 
-Transposition Scheme of encoding (Section 4) というのはこの部分。
+これはあくまで自装置の中に存在するSIDです。
 
-```
-4.  Encoding SRv6 SID Information
+そうではなく「あの機能にパケットを送るには、どのSIDを付ければよのか」ということを知りたいですよね。
 
-   The SRv6 Service SID(s) for a BGP service prefix is carried in the
-   SRv6 Services TLVs of the BGP Prefix-SID attribute.
+ルーティングテーブルのように宛先として使うべきSIDを一覧でみたいわけですが、残念ながらそれを表示するコマンドはなさそうです。
+SRv6はアドレス体系であって、情報を交換するプロトコルではありませんので、ISISの中やBGPの中に情報が散在してしまうのは、仕方ないのかもしれません。
 
-   For certain types of BGP Services, like L3VPN where a per-VRF SID
-   allocation is used (i.e., End.DT4 or End.DT6 behaviors), the same SID
-   is shared across multiple NLRIs, thus providing efficient packing.
-   However, for certain other types of BGP Services, like EVPN Virtual
-   Private Wire Service (VPWS) where a per-PW SID allocation is required
-   (i.e., End.DX2 behavior), each NLRI would have its own unique SID,
-   thereby resulting in inefficient packing.
+現実的には、全てのエッジルータからSIDの情報を集めてくることになると思います。
 
-   To achieve efficient packing, this document allows either 1) the
-   encoding of the SRv6 Service SID as a whole in the SRv6 Services TLVs
-   or 2) the encoding of only the common part of the SRv6 SID (e.g.,
-   Locator) in the SRv6 Services TLVs and the encoding of the variable
-   (e.g., Function or Argument parts) in the existing label fields
-   specific to that service encoding.  This later form of encoding is
-   referred to as the Transposition Scheme, where the SRv6 SID Structure
-   Sub-Sub-TLV describes the sizes of the parts of the SRv6 SID and also
-   indicates the offset of the variable part along with its length in
-   the SRv6 SID value.  The use of the Transposition Scheme is
-   RECOMMENDED for the specific service encodings that allow it, as
-   described further in Sections 5 and 6.
-```
-
-Transposition Schemeは転置スキームと訳すのかな。
-
-End.DT4のようにPer-CEやPer-VRFでSIDを割り当てるサービスでは、プレフィクスに対して同じSIDを割り当てることになるので、同じ情報を何度も繰り返し送信すのは無駄になる。
-転置スキームを使って一度送ったらそれを再利用する。
-
-```
-3.2.1.  SRv6 SID Structure Sub-Sub-TLV
-
-   SRv6 Service Data Sub-Sub-TLV Type 1 is assigned for the SRv6 SID
-   Structure Sub-Sub-TLV.  The SRv6 SID Structure Sub-Sub-TLV is used to
-   advertise the lengths of the individual parts of the SRv6 SID, as
-   defined in [RFC8986].  The terms Locator Block and Locator Node
-   correspond to the B and N parts, respectively, of the SRv6 Locator
-   that is defined in Section 3.1 of [RFC8986].  It is carried as Sub-
-   Sub-TLV in the SRv6 SID Information Sub-TLV.
-
-    0                   1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | SRv6 Service  |    SRv6 Service               | Locator Block |
-   | Data Sub-Sub  |    Data Sub-Sub-TLV           | Length        |
-   | -TLV Type=1   |    Length                     |               |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Locator Node  | Function      | Argument      | Transposition |
-   | Length        | Length        | Length        | Length        |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Transposition |
-   | Offset        |
-   +-+-+-+-+-+-+-+-+
-
-                  Figure 5: SRv6 SID Structure Sub-Sub-TLV
-
-   SRv6 Service Data Sub-Sub-TLV Type (1 octet):
-      This field is set to 1 to represent the SRv6 SID Structure Sub-
-      Sub-TLV.
-
-   SRv6 Service Data Sub-Sub-TLV Length (2 octets):
-      This field contains a total length of 6 octets.
-
-   Locator Block Length (1 octet):
-      This field contains the length of the SRv6 SID Locator Block in
-      bits.
-
-   Locator Node Length (1 octet):
-      This field contains the length of the SRv6 SID Locator Node in
-      bits.
-
-   Function Length (1 octet):
-      This field contains the length of the SRv6 SID Function in bits.
-
-   Argument Length (1 octet):
-      This field contains the length of the SRv6 SID Argument in bits.
-
-   Transposition Length (1 octet):
-      This field is the size in bits for the part of the SID that has
-      been transposed (or shifted) into an MPLS Label field.
-
-   Transposition Offset (1 octet):
-      This field is the offset position in bits for the part of the SID
-      that has been transposed (or shifted) into an MPLS Label field.
-```
-
-SIDのFunction部の情報を送るときに、20ビットのMPLSのラベル情報に置換する際のビットシフトの量をTransposition Lengthで指定する。
-ここが4になっているはず。
-
-
-
-
-
-
-
-
-
-
+<br>
 
 ## FunctionのSIDに到達するための経路は？
 
-IPv6のルーティングテーブルを検索すれば出てくる。
+ISISやBGPの情報から宛先として使うべきSIDがわかったとして、そこに到達する経路はどうなるでしょう。
 
-個々のSIDに関する情報を配信しているわけではないので、ロンゲストマッチのルールに従って最後はロケータにたどり着くはず。
+SRv6のSIDはIPv6と同じ形式ですから、IPv6のルーティングテーブルを検索すればSIDに到達するための経路が出てきます。
 
 ```
 fx201-pe1#show ipv6 route 3ffe:220:1:1:46::
@@ -610,17 +446,28 @@ Routing entry for 3ffe:220:1:1::/64
   fe80::280:bdff:fe4c:b2a3 (reachable by fe80:2726::/64), port-channel3010000, RD 0:0, System VRF-ID 0, NHD LINK fe80:2726::280:bdff:fe4c:b2a3 (22), refcnt 3
 ```
 
-## ローカルSIDは再配布される？
+ロンゲストマッチのルールに従って、ISISが配信した/64のロケータの情報にたどり着きます。
 
-静的に決めたSIDはどうなる？
+<br>
+
+## 狙った経路で通信する
+
+入り口のルータにパケットが着信したとして、そのパケットをどの経路で通すのかを制御することを考えます。
+
+一番簡単な方法はスタティックルーティングです。
+「あのSIDにたどり着くためには、ここを通過すること」という情報をルータに設定します。
 
 
 
+
+
+
+
+<br>
 
 ## 疎通確認の方法
 
-
-IOS-XRの場合は、ポリシー名を指定してping、tracerouteを打てる。
+IOS-XRの場合は、ポリシー名を指定してping、tracerouteを打てます。
 
 ```
 RP/0/RP0/CPU0:PE04#ping segment-routing srv6 policy name ?
@@ -718,33 +565,36 @@ pyATSを使って各種操作を自動化する。
 
 ## RFC
 
-Architecture
+RFC8986は必読です。
+
+## アーキテクチャ関連
 
 RFC 8402 Segment Routing Architecture
-RFC 8754 RFC 8754 - IPv6 Segment Routing Header (SRH)
 RFC 7855 Source Packet Routing in Networking (SPRING) Problem Statement and Requirements
 RFC 8660 Segment Routing with MPLS data plane
+RFC 8754 IPv6 Segment Routing Header (SRH)
+RFC 8986 Segment Routing over IPv6 (SRv6) Network Programming
 
-ISIS
+## ISIS関連
 
-RFC 8667 IS-IS Extensions for Segment Routing
-RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS
-RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS
 RFC 7810 IS-IS Traffic Engineering (TE) Metric Extensions
+RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS
+RFC 8667 IS-IS Extensions for Segment Routing
+RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS
 
-BGP
+## BGP関連
 
-RFC 8669 Segment Routing Prefix SID extensions for BGP
 RFC 8571 BGP-LS Advertisement of IGP Traffic Engineering Performance Metric Extensions
+RFC 8669 Segment Routing Prefix SID extensions for BGP
 
-OSPF
+## OSPF関連
 
+RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions
 RFC 8665 OSPF Extensions for Segment Routing
 RFC 8666 OSPFv3 Extensions for Segment Routing
 RFC 8476 Signaling MSD (Maximum SID Depth) using OSPF
-RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions
 
-OAM
+## OAM関連
 
-RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System
 RFC 8287 Label Switched Path (LSP) Ping/Trace for Segment Routing Networks Using MPLS Dataplane
+RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System
