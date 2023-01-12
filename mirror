@@ -15,7 +15,7 @@
         - git remote set-url --push origin https://srv6@dev.azure.com/srv6/JP-SRv6-%E6%96%B0%E6%8A%80%E8%A1%93%E8%82%B2%E6%88%90_ADO/_git/srv6-guide
 
     - 変更した場合はfetchして最新化してからpushする
-        - cd ~/git/mirror/pyats-fitelnet.git
+        - cd ~/git/mirror/srv6-guide.git
         - git fetch -p origin
         - git push --mirror
 
