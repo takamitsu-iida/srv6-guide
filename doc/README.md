@@ -664,31 +664,43 @@ RFC8986は必読です。
 ## アーキテクチャ関連
 
 RFC 8402 Segment Routing Architecture
+
 RFC 7855 Source Packet Routing in Networking (SPRING) Problem Statement and Requirements
+
 RFC 8660 Segment Routing with MPLS data plane
+
 RFC 8754 IPv6 Segment Routing Header (SRH)
+
 RFC 8986 Segment Routing over IPv6 (SRv6) Network Programming
 
 ## ISIS関連
 
 RFC 7810 IS-IS Traffic Engineering (TE) Metric Extensions
+
 RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS
+
 RFC 8667 IS-IS Extensions for Segment Routing
+
 RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS
 
 ## BGP関連
 
 RFC 8571 BGP-LS Advertisement of IGP Traffic Engineering Performance Metric Extensions
+
 RFC 8669 Segment Routing Prefix SID extensions for BGP
 
 ## OSPF関連
 
 RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions
+
 RFC 8665 OSPF Extensions for Segment Routing
+
 RFC 8666 OSPFv3 Extensions for Segment Routing
+
 RFC 8476 Signaling MSD (Maximum SID Depth) using OSPF
 
 ## OAM関連
 
 RFC 8287 Label Switched Path (LSP) Ping/Trace for Segment Routing Networks Using MPLS Dataplane
+
 RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System
