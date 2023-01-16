@@ -141,4 +141,185 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
 
 <br><br><br><br>
 
-# 設定パラメータ
+# 設計項目
+
+- 基盤ネットワーク設計
+    - 物理ネットワーク
+        - DC内ネットワーク
+            - 物理インタフェース速度
+            - エッジ収容方式
+            - 最大MTU
+        - DC間接続
+            - 通信路選定方式（現用・待機）
+        - ファシリティ(電源・ケーブル)
+
+    - アンダーレイプロトコル
+        - IPv6
+            - IPv6アドレス設計
+            - ルータID/Loopback
+
+        - BFD
+            - Hello
+            - BFD乗数
+
+        - ISIS
+            - プロセス名
+            - メトリック
+            - Hello/Dead
+            - エリア設計
+            - アドレス集約
+            - 装置起動時のプロセス待機（max-metric router-lsa on-startup [time]）
+            - BFD対応有無
+
+        - SRv6
+            - SR-TE
+            - TOS制御
+            - PSP（EVPN時に制約あり？）
+            - 静的SID割り当て
+                - IOS-XRはEnd.Xのみなので事実上は使わない
+
+
+    - オーバーレイプロトコル
+        - iBGP
+            - AS番号
+            - RR
+                - クラスタ
+            - keepalive/hold
+            - アトリビュート
+                - MED
+                - AS PATH (prepend)
+                - Local Pref
+            - nexthop tracking(bgp nexthop trigger delay)
+                - critical
+                - non-critical
+
+
+        - L3VPN
+            - vrf名
+            - rd値
+            - eBGP(対CE)
+                - AS番号
+                - keepalive/hold timer
+                - BFD有無
+                - アトリビュート
+                    - local pref(1系2系)
+                    - med(なし)
+                    - as-path prepend
+                - 経路再配送
+                - 経路数制限
+            - シングルセグメント構成
+                - MLAG構成時のESI
+                - anycast gateway
+                    - IP/MAC
+
+        - EVPN
+            - Bridge Domain名
+            - Bridge Group名
+            - storm control
+                - broadcast/multicast/unknown-unicast
+            - ESI-LAG収容
+                - ESI番号
+                - LACP
+                    - system mac
+                    - period(short/long)
+            - NextHop選択（lowest ip/highest ip/modulo）
+            - BUM
+                - split holizon
+            - STP制御
+            - VLAN
+                - VLAN-ID書き換え
+            - MAC制御
+                - フィルタリング
+                    - 制御フレーム
+            - 装置起動時のプロセス待機（startup-cost-in [time]）
+
+    - 信頼性設計
+        - リンク障害時の通過経路の明確化
+        - ネットワークの面冗長
+            - active-standby
+        - srv6 microloop avoidance
+        - srv6 TI-LFA
+            - node protection
+            - link protection
+        - L3VPN収容
+            - eBGP
+                - 4ピア構成
+            - esi-lag
+                - anycast gateway
+        - EVPN収容
+            - ESI-LAG
+                - Active-Active
+                - Active-Standby(port-active設定)
+        - サイレント障害検知
+            - SR DPM(Data Plane Monitoring)のSRv6版は？
+
+    - ネットワーク性能設計
+        - 帯域制御
+            - 適用箇所
+            - 方式
+                - 契約種別
+                    - ベストエフォート
+                        - 共有ユーザ数
+                    - 帯域確保
+                - classify粒度
+                    - 管理系通信(BGP/ISIS/BFD/ICMP/...)
+                    - vlan/ip/tcp
+                - shaping/policing
+        - RTT計測
+
+    - 拡張設計
+        - 収容数増加時のスケールアウト単位
+        - 装置一台あたりの許容スペックの明確化
+            - 論理インタフェース数
+            - Bridge Domain数
+            - bundle-ether数
+            - EVI数
+            - BVI数
+            - VRF数
+            - IP経路数
+            - MAC数
+        - WAN回線不足時
+            - スケールアップ
+            - スケールアウト
+
+    - ネットワークセキュリティ
+        - BGP経路数保護
+        - L2ループ対策
+            - ストーム制御
+        - 装置管理接続
+            - アドレス制限
+            - 認証
+        - CPU保護
+            - CoPP
+        - 証跡管理
+        - 装置OSの脆弱性対応
+
+- 運用保守
+    - in-band or out-band
+    - SNMP
+        - バージョン、認証、trap、community
+    - gRPC
+    - NTP
+        - サーバ
+    - 監視
+        - ICMP監視
+        - SNMP Trap
+        - 障害監視
+            - 装置
+            - リンク
+            - 環境（ファン・電源）
+        - トラフィック量監視
+            - 回線使用率
+            - エラーパケット数
+        - フロー監視
+            - NetFlow
+        - キャパシティ監視
+            - CPU
+            - メモリ
+    - ログ
+        - SYSLOG
+        -
+    - ライフサイクル管理
+        - ソフトウェアバージョンアップ
+    - メンテナンス停止
+    - 保守交換手順
