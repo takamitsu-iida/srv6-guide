@@ -146,17 +146,40 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
 - 基盤ネットワーク設計
     - 物理ネットワーク
         - DC内ネットワーク
-            - 物理インタフェース速度
-            - エッジ収容方式
-            - 最大MTU
+            - 面設計(1系-2系 or A面-B面)
+            - トポロジ
+                - ラダー型 or フルメッシュツリー
+                - ルータ種別
+                    - Cルータ
+                    - PEルータ
+                    - WANルータ
+            - コアトポロジ
+                - Cルータ間接続
+            - PEトポロジ
+                - Cルータ向け接続
+                - CEルータ向け接続
+                    - L3VPNシングルセグメント
+                        - VRRP or Anycast Gateway
+                    - L3VPNマルチセグメント
+                    - EVPN
+                        - ESI LAG
+                    - L3VPN + EVPN
+            - 物理インタフェース
+                - 速度
+                - MTU 9000 byte
+
         - DC間接続
-            - 通信路選定方式（現用・待機）
-        - ファシリティ(電源・ケーブル)
+            - 回線冗長方式
+                - 現用・待機
+            - プロトコルドメイン
+                - ISISフラット or BGP
 
     - アンダーレイプロトコル
         - IPv6
-            - IPv6アドレス設計
-            - ルータID/Loopback
+            - アドレス設計
+            - Loopbackインタフェース
+            - インタフェースアドレス
+                - ホスト部の老番・若番
 
         - BFD
             - Hello
@@ -164,7 +187,13 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
 
         - ISIS
             - プロセス名
-            - メトリック
+            - エリア番号
+            - ルータタイプ
+                L1/L2/L1-2
+            - インタフェースタイプ
+                - point-to-pointのみ
+            - メトリック設計
+                - 10-10-10-100
             - Hello/Dead
             - エリア設計
             - アドレス集約
@@ -172,14 +201,14 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
             - BFD対応有無
 
         - SRv6
-            - SR-TE
+            - ロケータ設計
             - TOS制御
             - PSP（EVPN時に制約あり？）
             - 静的SID割り当て
                 - IOS-XRはEnd.Xのみなので事実上は使わない
+            - SR-TE
+            - FlexAlgo
 
-
-    - オーバーレイプロトコル
         - iBGP
             - AS番号
             - RR
@@ -193,11 +222,20 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
                 - critical
                 - non-critical
 
+    - オーバーレイプロトコル
 
         - L3VPN
-            - vrf名
-            - rd値
-            - eBGP(対CE)
+            - VRF
+                - 名前
+                - RD/RT
+
+            - address-family vpnv4
+                - ロケータ
+
+            - address-family vpnv6
+                - ロケータ
+
+            - address-family ipv4 vrf/ipv6 vrf
                 - AS番号
                 - keepalive/hold timer
                 - BFD有無
@@ -207,51 +245,56 @@ TE（トラフィックエンジニアリング）は一方通行のトンネル
                     - as-path prepend
                 - 経路再配送
                 - 経路数制限
+
             - シングルセグメント構成
-                - MLAG構成時のESI
-                - anycast gateway
+                - anycast gateway address
                     - IP/MAC
 
         - EVPN
-            - Bridge Domain名
-            - Bridge Group名
+            - Bridge Group
+            - Bridge Domain
+                - 文字列 L2VPN単位
+            - EVI番号
+                - 1-65534 L2VPN単位
+                - RD/RT
+            - ESI
+                - 16進数 物理ポート単位
             - storm control
                 - broadcast/multicast/unknown-unicast
-            - ESI-LAG収容
-                - ESI番号
+            - ESI-LAG
+                - Bundle-Ether番号(Port-channel)番号
                 - LACP
                     - system mac
                     - period(short/long)
+            - isolation group
+                - 適用有無
             - NextHop選択（lowest ip/highest ip/modulo）
             - BUM
                 - split holizon
-            - STP制御
-            - VLAN
-                - VLAN-ID書き換え
-            - MAC制御
-                - フィルタリング
-                    - 制御フレーム
+            - VLAN-ID書き換え
+            - L2制御フレーム(BPDU/LLDP/CDP...)
+                - フィルタリング or 透過
             - 装置起動時のプロセス待機（startup-cost-in [time]）
+
 
     - 信頼性設計
         - リンク障害時の通過経路の明確化
-        - ネットワークの面冗長
-            - active-standby
-        - srv6 microloop avoidance
-        - srv6 TI-LFA
+        - ネットワークの面冗長設計
+            - Active-Standby or Active-Active
+        - SRv6 microloop avoidance
+        - SRv6 TI-LFA
             - node protection
             - link protection
         - L3VPN収容
             - eBGP
                 - 4ピア構成
             - esi-lag
-                - anycast gateway
+                - anycast gateway or vrrp or hsrp
         - EVPN収容
             - ESI-LAG
-                - Active-Active
-                - Active-Standby(port-active設定)
+                - Active-Active or Active-Standby(port-active設定)
         - サイレント障害検知
-            - SR DPM(Data Plane Monitoring)のSRv6版は？
+            - SR DPM(Data Plane Monitoring)のSRv6版はある？
 
     - ネットワーク性能設計
         - 帯域制御
