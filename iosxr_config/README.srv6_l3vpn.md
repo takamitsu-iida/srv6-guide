@@ -1,12 +1,14 @@
 # SRv6 L3VPN
 
-PEルータにVRFを作ってL3VPNを構成します。VPNとしてエンドエンドの通信を届けますので、SRv6網内の経路はクリーンなままです。
+PEルータにVRFを作ってL3VPNを構成します。エッジルータ間でiBGPでvpnv4経路を交換します。
+
+VPNとしてエンドエンドの通信を届けますので、SRv6網内の経路はクリーンなままです。
 
 <br><br>
 
 ## 構成
 
-![構成](img/srv6_bgp.drawio.png)
+![構成](img/srv6_l3vpn.drawio.png)
 
 <br>
 
@@ -18,13 +20,11 @@ CE05からPE04へのpingをキャプチャ。送信元アドレスと宛先ア�
 
 <br>
 
-
-
 ## CR01が知っているSID
 
 CR01はVRFを定義しませんので、自身の経路情報としては（格納先がないので）何も持っていません。
 
-ですが、BGPのルートリフレクタ役を担っていますので、BGPのテーブルに全てのvpnv4の情報を保持しています。
+ですが、BGPのルートリフレクタ役を担っていますので、BGPのテーブルに全てのvpnv4の情報を保持していて、それを覗き見ることは可能です。
 
 ```
 RP/0/RP0/CPU0:CR01#show bgp vpnv4 unicast received-sids
@@ -56,7 +56,7 @@ Route Distinguisher 1:1 の経路として２つあり、それぞれどのSID�
 
 ## PE03が採番したSID
 
-`show segment-routing srv6 sid` で自身が割り当てたSIDの一覧がわかりますが、どの経路に、というところまではわかりません。
+`show segment-routing srv6 sid` で自身が割り当てたSIDの一覧がわかりますが、どの経路に割り当てられたSIDか、というところまではわかりません。
 
 ```
 RP/0/RP0/CPU0:PE03#show segment-routing srv6 sid
@@ -74,6 +74,7 @@ SID                         Behavior          Context                           
 ```
 
 経路とSIDの対応を知りたい場合は`show bgp vpnv4 unicast local-sids`を参照します。
+192.168.3.0/24に対してはSID `2001:db8:0:3:42::` が割り当てられています。
 
 ```
 RP/0/RP0/CPU0:PE03#show bgp vpnv4 unicast local-sids
@@ -166,8 +167,9 @@ Routing entry for 192.168.4.0/24
 
 関係する部分のみ。
 
+CR01はルートリフレクタ役を担っていますので、BGP設定にaddress-family vpnv4が増えています。
+
 ```
-!
 router bgp 65000
  bgp router-id 1.1.1.1
  bgp cluster-id 1
@@ -178,6 +180,8 @@ router bgp 65000
  neighbor 2001:db8:0:2::1
   remote-as 65000
   update-source Loopback0
+  address-family ipv4 unicast
+  !
   address-family vpnv4 unicast
   !
  !
@@ -202,132 +206,6 @@ router bgp 65000
   !
  !
 !
-```
-
-
-インタフェースに設定するMTUは9000バイトにイーサネットヘッダ14バイトを加えて9014としています。
-同じ意味合いでCSR1000vを設定するときにはMTUを9000バイトと設定します。
-
-SRv6に関して特に留意すべきことはありません。
-SRv6のロケータを定義して、ISIS設定に加えているだけです。
-
-```
-!
-hostname CR01
-clock timezone JST Asia/Tokyo
-username root
- group root-lr
- group cisco-support
- secret 10 $6$gyKeD/jZuHdy2D/.$nrt1ShaKihimEdQr.ASYcpWsFzn3zHg4oNPxgC5CS05ppkFthJA2EklVviaeuhf5DNUVOWWvOuWPqLGPSpEbZ0
-!
-cdp
-!
-interface Loopback0
- ipv6 address 2001:db8:0:1::1/128
-!
-interface MgmtEth0/RP0/CPU0/0
- shutdown
-!
-interface GigabitEthernet0/0/0/0
- cdp
- mtu 9014
- ipv6 enable
-!
-interface GigabitEthernet0/0/0/1
- cdp
- mtu 9014
- ipv6 enable
-!
-interface GigabitEthernet0/0/0/2
- cdp
- mtu 9014
- ipv6 enable
-!
-router isis core
- is-type level-2-only
- net 49.0000.0000.0000.0001.00
- distribute link-state
- nsf ietf
- address-family ipv6 unicast
-  metric-style wide
-  router-id Loopback0
-  segment-routing srv6
-   locator a
-   !
-  !
- !
- interface Loopback0
-  address-family ipv6 unicast
-  !
- !
- interface GigabitEthernet0/0/0/0
-  point-to-point
-  address-family ipv6 unicast
-   metric 10
-  !
- !
- interface GigabitEthernet0/0/0/1
-  point-to-point
-  address-family ipv6 unicast
-   metric 10
-  !
- !
- interface GigabitEthernet0/0/0/2
-  point-to-point
-  address-family ipv6 unicast
-   metric 10
-  !
- !
-!
-router bgp 65000
- bgp router-id 1.1.1.1
- bgp cluster-id 1
- address-family ipv4 unicast
- !
- address-family vpnv4 unicast
- !
- neighbor 2001:db8:0:2::1
-  remote-as 65000
-  update-source Loopback0
-  address-family vpnv4 unicast
-  !
- !
- neighbor 2001:db8:0:3::1
-  remote-as 65000
-  update-source Loopback0
-  address-family ipv4 unicast
-   route-reflector-client
-  !
-  address-family vpnv4 unicast
-   route-reflector-client
-  !
- !
- neighbor 2001:db8:0:4::1
-  remote-as 65000
-  update-source Loopback0
-  address-family ipv4 unicast
-   route-reflector-client
-  !
-  address-family vpnv4 unicast
-   route-reflector-client
-  !
- !
-!
-segment-routing
- !
- srv6
-  logging locator status
-  encapsulation
-   source-address 2001:db8:0:1::1
-  !
-  locators
-   locator a
-    prefix 2001:db8:0:1::/64
-   !
-  !
- !
-!
-end
 ```
 
 <br>
@@ -336,10 +214,7 @@ end
 
 関連するところのみ。
 
-eBGPでCE05と接続しますので、経路フィルタの設定が必須です。IOS-XRはeBGPに対してフィルタを設定しないと有効になりません。
-
-BGPで学習したipv4 unicast経路にロケータを割り当てています。
-VRFやトンネルを定義せずとも、これだけの設定でIPv4 over SRv6が動きます。
+vrf 1に関する定義、CE向けのインタフェース定義、BGPのvpnv4定義が増えています。
 
 ```
 !
@@ -352,24 +227,27 @@ username root
 !
 cdp
 !
-interface Loopback0
- ipv6 address 2001:db8:0:3::1/128
+vrf vrf1
+ rd 1:1
+ address-family ipv4 unicast
+  import route-target
+   1:1
+  !
+  export route-policy SET_COLOR_10
+  export route-target
+   1:1
+  !
+ !
 !
-interface MgmtEth0/RP0/CPU0/0
- shutdown
-!
-interface GigabitEthernet0/0/0/0
- cdp
- mtu 9014
- ipv6 enable
-!
-interface GigabitEthernet0/0/0/1
- cdp
- mtu 9014
- ipv6 enable
 !
 interface GigabitEthernet0/0/0/2
  ipv4 address 192.168.3.1 255.255.255.0
+!
+interface GigabitEthernet0/0/0/2.10
+ vrf vrf1
+ ipv4 address 192.168.3.1 255.255.255.0
+ encapsulation dot1q 10
+!
 !
 extcommunity-set opaque color_10
   10
@@ -394,22 +272,6 @@ router isis core
   segment-routing srv6
    locator a
    !
-  !
- !
- interface Loopback0
-  address-family ipv6 unicast
-  !
- !
- interface GigabitEthernet0/0/0/0
-  point-to-point
-  address-family ipv6 unicast
-   metric 10
-  !
- !
- interface GigabitEthernet0/0/0/1
-  point-to-point
-  address-family ipv6 unicast
-   metric 20
   !
  !
 !
@@ -457,6 +319,21 @@ router bgp 65000
    next-hop-self
   !
  !
+ vrf vrf1
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator a
+    alloc mode per-vrf
+   !
+  !
+  neighbor 192.168.3.2
+   remote-as 65005
+   address-family ipv4 unicast
+    route-policy PASS-ALL in
+    route-policy PASS-ALL out
+   !
+  !
+ !
 !
 segment-routing
  srv6
@@ -474,27 +351,30 @@ segment-routing
 end
 ```
 
-SRv6のヘッドエンド動作でカプセル化するソースアドレスは、この設定です。
+vrfに対してどのロケータからSIDを採番するかは、SRv6のヘッドエンド動作でカプセル化するソースアドレスは、この設定です。
+vrf allで設定することで、vrf個別に設定する必要がなくなります。
 
 ```
-!
-segment-routing
- srv6
-  encapsulation
-   source-address 2001:db8:0:3::1
-  !
-```
-
-BGPで学習したIPv4経路に対してSIDを付与するのは、この設定です。
-
-```
-!
 router bgp 65000
- bgp router-id 1.1.1.3
- address-family ipv4 unicast
-  segment-routing srv6
-   locator a
-   alloc mode per-vrf
+ !
+ address-family vpnv4 unicast
+  vrf all
+   segment-routing srv6
+    locator a
+   !
   !
  !
+```
+
+今回はvrf個別に設定を加えて、上書きしています。
+
+```
+router bgp 65000
+ vrf vrf1
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator a
+    alloc mode per-vrf
+   !
+  !
 ```

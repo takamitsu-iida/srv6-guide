@@ -27,3 +27,5 @@ https://www-cisco-com.translate.goog/c/en/us/td/docs/iosxr/ncs5500/segment-routi
 [SRv6 BGP](README.srv6_bgp.md)
 
 [SRv6 L3VPN](README.srv6_l3vpn.md)
+
+[SRv6 L3VPN uSID](README.srv6_l3vpn_usid.md)

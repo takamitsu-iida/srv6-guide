@@ -135,7 +135,7 @@ RP/0/RP0/CPU0:PE03#
 
 
 インタフェースに設定するMTUは9000バイトにイーサネットヘッダ14バイトを加えて9014としています。
-同じ意味合いでCSR1000vを設定するときにはMTUを9000バイトと設定します。
+同じ意味合いでCSR1000vに設定するときにはMTUを9000バイトと設定します。IOS-XRとIOS-XEではMTUの数え方が異なるので注意が必要です。
 
 SRv6に関して特に留意すべきことはありません。
 SRv6のロケータを定義して、ISIS設定に加えているだけです。
@@ -213,12 +213,10 @@ router bgp 65000
  bgp cluster-id 1
  address-family ipv4 unicast
  !
- address-family vpnv4 unicast
- !
  neighbor 2001:db8:0:2::1
   remote-as 65000
   update-source Loopback0
-  address-family vpnv4 unicast
+  address-family ipv4 unicast
   !
  !
  neighbor 2001:db8:0:3::1
@@ -227,17 +225,11 @@ router bgp 65000
   address-family ipv4 unicast
    route-reflector-client
   !
-  address-family vpnv4 unicast
-   route-reflector-client
-  !
  !
  neighbor 2001:db8:0:4::1
   remote-as 65000
   update-source Loopback0
   address-family ipv4 unicast
-   route-reflector-client
-  !
-  address-family vpnv4 unicast
    route-reflector-client
   !
  !
@@ -350,13 +342,6 @@ router bgp 65000
    alloc mode per-vrf
   !
  !
- address-family vpnv4 unicast
-  vrf all
-   segment-routing srv6
-    locator a
-   !
-  !
- !
  neighbor 192.168.3.2
   remote-as 65005
   address-family ipv4 unicast
@@ -371,18 +356,12 @@ router bgp 65000
    encapsulation-type srv6
    next-hop-self
   !
-  address-family vpnv4 unicast
-   next-hop-self
-  !
  !
  neighbor 2001:db8:0:2::1
   remote-as 65000
   update-source Loopback0
   address-family ipv4 unicast
    encapsulation-type srv6
-   next-hop-self
-  !
-  address-family vpnv4 unicast
    next-hop-self
   !
  !
