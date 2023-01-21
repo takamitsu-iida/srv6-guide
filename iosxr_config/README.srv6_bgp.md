@@ -67,6 +67,17 @@ Processed 2 prefixes, 2 paths
 
 <br>
 
+## CR01からpingできる？
+
+できません。
+
+CR01は192.168.3.0/24の経路を知っています。つけるべきSIDも知っています。それでもCR01からはpingできません。
+理由は簡単で、送信元IPアドレスとなるIPv4アドレスが存在しないので、インナーパケットを組み立てられないためです。
+
+CR01からもpingを飛ばしたいのであれば、ループバックインタフェースにIPv4アドレスを付けて、そのアドレスをBGPで配信するとよいでしょう。
+
+<br>
+
 ## PE03が採番したSID
 
 `2001:db8:0:3::43::`に注目。VRFを作っていませんが 'default' というvrfが最初から存在していて、そのvrfに対するEnd.DT4になっています。
@@ -212,11 +223,16 @@ router bgp 65000
  bgp router-id 1.1.1.1
  bgp cluster-id 1
  address-family ipv4 unicast
+  segment-routing srv6
+   locator a
+   alloc mode per-vrf
+  !
  !
  neighbor 2001:db8:0:2::1
   remote-as 65000
   update-source Loopback0
   address-family ipv4 unicast
+   encapsulation-type srv6
   !
  !
  neighbor 2001:db8:0:3::1
@@ -224,6 +240,7 @@ router bgp 65000
   update-source Loopback0
   address-family ipv4 unicast
    route-reflector-client
+   encapsulation-type srv6
   !
  !
  neighbor 2001:db8:0:4::1
@@ -231,6 +248,7 @@ router bgp 65000
   update-source Loopback0
   address-family ipv4 unicast
    route-reflector-client
+   encapsulation-type srv6
   !
  !
 !
@@ -382,7 +400,7 @@ segment-routing
 end
 ```
 
-SRv6のヘッドエンド動作でカプセル化するソースアドレスは、この設定です。
+SRv6のヘッドエンド動作でカプセル化する送信元IPv6アドレスは、この設定です。
 
 ```
 !
@@ -406,3 +424,23 @@ router bgp 65000
   !
  !
 ```
+
+BGPで学習したIPv4経路をSRv6に乗せるのは、この設定です。
+
+```
+router bgp 65000
+ !
+ neighbor 2001:db8:0:1::1
+  address-family ipv4 unicast
+   encapsulation-type srv6
+  !
+ !
+ neighbor 2001:db8:0:2::1
+  address-family ipv4 unicast
+   encapsulation-type srv6
+  !
+ !
+!
+```
+
+この設定がないと、IPv4のまま通信しようとします。
