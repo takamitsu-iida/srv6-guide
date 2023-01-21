@@ -1,0 +1,165 @@
+!! IOS XR Configuration 7.7.1
+!! Last configuration change at Sat Jan 21 17:57:00 2023 by root
+!
+hostname CR02
+clock timezone JST Asia/Tokyo
+username root
+ group root-lr
+ group cisco-support
+ secret 10 $6$rpp7R1RRGrboBR1.$oatKdhM9apNQzBINNdYFXkzv.ECazwlM1Ag7X5Uhod3Z2avenEeE6RM72a8ODYehu1naGMApf/7kKgL9enNYI1
+!
+cdp
+pce
+ address ipv6 2001:db8:0:2::1
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method email disable
+  destination transport-method http
+ !
+!
+interface Loopback0
+ no shutdown
+ ipv6 address 2001:db8:0:2::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ no shutdown
+ shutdown
+!
+interface GigabitEthernet0/0/0/0
+ no shutdown
+ cdp
+ mtu 9014
+ ipv6 enable
+!
+interface GigabitEthernet0/0/0/1
+ no shutdown
+ cdp
+ mtu 9014
+ ipv6 enable
+!
+interface GigabitEthernet0/0/0/2
+ no shutdown
+ cdp
+ mtu 9014
+ ipv6 enable
+!
+interface GigabitEthernet0/0/0/3
+ no shutdown
+ shutdown
+!
+router isis core
+ is-type level-2-only
+ net 49.0000.0000.0000.0002.00
+ distribute link-state
+ nsf ietf
+ address-family ipv6 unicast
+  router-id Loopback0
+  segment-routing srv6
+   locator a
+   !
+   locator ua
+   !
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  point-to-point
+  address-family ipv6 unicast
+   metric 20
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  point-to-point
+  address-family ipv6 unicast
+   metric 20
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  point-to-point
+  address-family ipv6 unicast
+   metric 20
+  !
+ !
+!
+router bgp 65000
+ bgp router-id 1.1.1.2
+ bgp cluster-id 1
+ address-family ipv4 unicast
+  segment-routing srv6
+   locator a
+   alloc mode per-vrf
+  !
+ !
+ address-family vpnv4 unicast
+ !
+ neighbor 2001:db8:0:1::1
+  remote-as 65000
+  update-source Loopback0
+  address-family ipv4 unicast
+   encapsulation-type srv6
+  !
+  address-family vpnv4 unicast
+  !
+ !
+ neighbor 2001:db8:0:3::1
+  remote-as 65000
+  update-source Loopback0
+  address-family ipv4 unicast
+   route-reflector-client
+   encapsulation-type srv6
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+ !
+ neighbor 2001:db8:0:4::1
+  remote-as 65000
+  update-source Loopback0
+  address-family ipv4 unicast
+   route-reflector-client
+   encapsulation-type srv6
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+ !
+!
+segment-routing
+ traffic-eng
+  interface GigabitEthernet0/0/0/1
+   affinity
+    name gold
+   !
+  !
+  interface GigabitEthernet0/0/0/2
+   affinity
+    name gold
+   !
+  !
+  srv6
+  !
+  affinity-map
+   name gold bit-position 1
+  !
+ !
+ srv6
+  logging locator status
+  encapsulation
+   source-address 2001:db8:0:2::1
+  !
+  locators
+   locator a
+    prefix 2001:db8:0:2::/64
+   !
+   locator ua
+    micro-segment behavior unode psp-usd
+    prefix fd00:0:200::/48
+   !
+  !
+ !
+!
+end
+
