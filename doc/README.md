@@ -187,8 +187,8 @@ iBGPはフルメッシュでピアリングしなければいけませんので�
 
 > **Note**
 >
-> VPNは必須というわけではありません。
-> IOS-XRではBGPで受信した経路に対してSIDを割り当てられます。route-policyを設定することで経路ごとにSIDを割り当てることもできます。
+> VPNは必須ではありません。
+> IOS-XRではBGPで受信した経路に対してSIDを割り当てられます。(VRFではない)グローバルのルーティングインスタンスにSRv6を適用できます。
 
 <br>
 
@@ -445,11 +445,29 @@ VRF単位にファンクションを割り当てるのがEnd.DT、CE装置単位
 
 ## SIDのルーティングテーブル
 
-ネットワークを運用管理する立場からみると「あの機能にパケットを送るには、どのSIDを付ければよのか」ということを知りたくなりますね。
-しかしながら、SRv6はアドレス体系であって、情報を交換するプロトコルではありませんので、SIDに関するルーティングテーブルというものは存在しません。
-ISISの中やBGPの中に情報が散在してしまうのは、仕方ないのかもしれません。
+ネットワークを運用管理する立場からみると「あの機能にパケットを送るには、どのSIDを付ければよのか」ということを知りたくなります。
+しかしながら、SRv6はアドレス体系であって、情報を交換するプロトコルではありませんので、SIDにルーティングテーブルというものは存在しません。
+End.XはISIS、End.DTやEnd.DXはBGPの中に詳細情報が格納されています。
+各プロトコルに関してのshowコマンドを駆使することになります。
+現実的には全てのエッジルータからSIDの情報を集めて一元管理することになると思います。
 
-現実的には、全てのエッジルータからSIDの情報を集めてくることになると思います。
+> **Note**
+>
+> IOS-XRであれば、これらコマンドを駆使して経路とSIDの対応を調べます。
+>
+> show segment-routing srv6 sid
+>
+> show bgp vpnv4 unicast local-sids
+>
+> show bgp vpnv4 unicast received-sids
+>
+> show bgp vrf NAME local-sids
+>
+> show bgp vrf NAME received-sids
+>
+> show route vrf NAME PREFIX detail
+>
+> show cef vrf NAME PREFIX
 
 <br>
 
@@ -824,32 +842,15 @@ Cisco NSO(Network Services Orchestrator)
 
 JuniperはCSO(Contail Service Orchestration)
 
-ただ、現場作業時にNSOを持ち込むのはオーバースペックなので、簡易なツールが必要。
+ただ、現場作業時にNSOを持ち込むのはオーバースペックなので、簡易なツールも必要。
+pyATSを使って各種操作を自動化するとよい。
 
-pyATSを使って各種操作を自動化する。
-
-できること
-
+作成済みスクリプトの例
 - ファブリック内のSIDを全て収集
-
+- BGP状態の確認
+- ISIS状態の確認
 - パラメータシートからのVPNプロビジョニング
-
 - end-to-endの疎通確認
-
-
-## 要望
-
-機能追加
-
-- API(RESTCONF/YANGモデル)の実装 これからGenieのパーサーを揃えていくのは辛い
-
-- ping srv6 <ポリシー> の実装 これはないと困る
-
-- QoS 富士通のデータセンターでSR-MPLSを設計したときに最も苦労したのがこれ SRヘッダを見てQoSできるといいのかも
-
-- path-tracing の実装
-
-- gRPCを使ったdial-in/dial-outでのテレメトリ
 
 <br><br><br><br>
 

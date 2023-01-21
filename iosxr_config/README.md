@@ -21,3 +21,9 @@ https://www-cisco-com.translate.goog/c/en/us/td/docs/iosxr/ncs5500/segment-routi
 TE
 
 https://www-cisco-com.translate.goog/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x/configure-srv6-traffic-engineering.html?_x_tr_sl=en&_x_tr_tl=ja&_x_tr_hl=ja&_x_tr_pto=wapp
+
+
+
+[SRv6 BGP](README.srv6_bgp.md)
+
+[SRv6 L3VPN](README.srv6_l3vpn.md)
