@@ -1,5 +1,7 @@
 # IOS-XR SRv6 設定例
 
+以下の順番で設定を追加していきます。
+
 [SRv6 BGP](README.srv6_bgp.md) IPv4 over SRv6構成の設定例です。
 
 [SRv6 L3VPN](README.srv6_l3vpn.md) L3VPN over SRv6構成の設定例です。
