@@ -40,7 +40,7 @@ B    192.168.4.0/24 [200/0] via 2001:db8:0:4::1 (nexthop in vrf default), 00:03:
 
 BGPで学習した経路に対してSIDが付いています。
 
-実際の通信に使う宛先はルーティングテーブルのnexthopではなく、SIDの方です。
+実際の通信に使う宛先はルーティングテーブルにあるNext Hopではなく、Received Sidの方です。
 
 ```
 RP/0/RP0/CPU0:CR01#show bgp ipv4 unicast received-sids
@@ -80,7 +80,7 @@ CR01からもpingを飛ばしたいのであれば、ループバックインタ
 
 ## PE03が採番したSID
 
-`2001:db8:0:3::43::`に注目。VRFを作っていませんが 'default' というvrfが最初から存在していて、そのvrfに対するEnd.DT4になっています。
+`2001:db8:0:3::43::` の行に注目。'default' というvrfが最初から存在していて、そのvrfに対するEnd.DT4になっています。
 
 ```
 RP/0/RP0/CPU0:PE03#show segment-routing srv6 sid
@@ -103,9 +103,8 @@ SID                         Behavior          Context                           
 
 PE03がiBGPで学習した経路を詳細に見てみます。
 
-`SRv6 Headend: H.Encaps.Red [base], SID-list {2001:db8:0:4:43::}`
-
-このことから、192.168.4.0/24に対しては、SRv6ヘッドエンドの動きをして、SIDリストは2001:db8:0:4:43::ということがわかります。
+`SRv6 Headend: H.Encaps.Red [base], SID-list {2001:db8:0:4:43::}` の部分に注目。
+192.168.4.0/24に対して、SRv6ヘッドエンドの動きをして、付与するSIDは2001:db8:0:4:43::ということがわかります。
 
 ```
 RP/0/RP0/CPU0:PE03#show route 192.168.4.0/24 detail
