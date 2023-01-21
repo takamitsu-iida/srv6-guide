@@ -1,18 +1,36 @@
-# IOS-XRのSRv6
+# IOS-XR SRv6 設定例
 
-制約事項
+[SRv6 BGP](README.srv6_bgp.md)
 
-- EVPNはXRv9000では動作しない
+[SRv6 L3VPN](README.srv6_l3vpn.md)
 
-- CSR1000vはSRv6を実装していない
+[SRv6 L3VPN uSID](README.srv6_l3vpn_usid.md)
 
-- IOS-XRはuSIDをサポート、簡単
 
-- TEを使うならuSIDが必要
+
+【留意事項】
+
+- XRv9000はSRv6を実装しています
+
+- XRv9000はSRv6 uSIDを実装しています
+
+- XRv9000はSRv6 TEを実装しています
+
+- XRv9000でTE Policyを使うためにはuSIDが必要です
+
+- CRS1000vはEVPNを実装しています
+
+- CSR1000vはSRv6を実装していません
+
+
+【マニュアル】
 
 https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/iosxr/ncs560/segment-routing/73x/b-segment-routing-cg-73x-ncs560/m-configuring-srv6-traffic-engineering-ncs5xx.html.xml#id_125396
 
 https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x/configure-srv6-micro-sid.html
+
+
+【マニュアル（Google翻訳）】
 
 uSID
 
@@ -21,11 +39,3 @@ https://www-cisco-com.translate.goog/c/en/us/td/docs/iosxr/ncs5500/segment-routi
 TE
 
 https://www-cisco-com.translate.goog/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x/configure-srv6-traffic-engineering.html?_x_tr_sl=en&_x_tr_tl=ja&_x_tr_hl=ja&_x_tr_pto=wapp
-
-
-
-[SRv6 BGP](README.srv6_bgp.md)
-
-[SRv6 L3VPN](README.srv6_l3vpn.md)
-
-[SRv6 L3VPN uSID](README.srv6_l3vpn_usid.md)
