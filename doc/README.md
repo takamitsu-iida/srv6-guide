@@ -857,7 +857,7 @@ Success rate is   0 percent (0/1)
 ```
 
 
-## OAM (Operation and Maintenance)
+## OAM (Operations, Administration, and Maintenance)
 
 ファブリックネットワークは、全体を一つの装置として見るので、個々の装置の管理ではなく、複数の装置を同時に扱う必要がある。
 パケットが入ってきた場所と、出ていく場所は異なる装置なのが通常なので、その両方の装置をケアしなければいけない。
