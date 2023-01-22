@@ -514,3 +514,20 @@ router bgp 65000
    !
   !
 ```
+
+
+<br><br>
+
+## 設定
+
+[CR01](config_l3vpn_usid/1_CR01.txt)
+
+[CR02](config_l3vpn_usid/2_CR02.txt)
+
+[PE03](config_l3vpn_usid/3_PE03.txt)
+
+[PE04](config_l3vpn_usid/4_PE04.txt)
+
+[CE05](config_l3vpn_usid/6_CE05.txt)
+
+[CE06](config_l3vpn_usid/5_CE06.txt)

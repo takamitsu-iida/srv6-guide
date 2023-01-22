@@ -1,0 +1,298 @@
+!! IOS XR Configuration 7.7.1
+!! Last configuration change at Sun Jan 22 14:49:02 2023 by root
+!
+hostname PE04
+clock timezone JST Asia/Tokyo
+username root
+ group root-lr
+ group cisco-support
+ secret 10 $6$WioWU19h6s90CU1.$gwOqXnFpqCKAHQ9rfd0FEvGA1l3fnkc7WiPn.bjz9BE5DIwAk2JCek7GjiEWRk94SLZVdgRUVMBZH0gKN.vqw.
+!
+cdp
+vrf vrf1
+ rd 1:1
+ address-family ipv4 unicast
+  import route-target
+   1:1
+  !
+  export route-policy SET_COLOR_10
+  export route-target
+   1:1
+  !
+ !
+ address-family ipv6 unicast
+ !
+!
+vrf vrf2
+ rd 1:2
+ address-family ipv4 unicast
+  import route-target
+   1:2
+  !
+  export route-policy SET_COLOR_10
+  export route-target
+   1:2
+  !
+ !
+!
+line console
+ session-timeout 30
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method email disable
+  destination transport-method http
+ !
+!
+interface Loopback0
+ no shutdown
+ ipv6 address 2001:db8:0:4::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ no shutdown
+ shutdown
+!
+interface GigabitEthernet0/0/0/0
+ no shutdown
+ cdp
+ mtu 9014
+ ipv6 enable
+!
+interface GigabitEthernet0/0/0/0.10
+ no shutdown
+ mtu 9014
+ ipv6 enable
+ encapsulation dot1q 10
+!
+interface GigabitEthernet0/0/0/0.20
+ no shutdown
+ mtu 9014
+ ipv6 enable
+ encapsulation dot1q 20
+!
+interface GigabitEthernet0/0/0/1
+ no shutdown
+ cdp
+ mtu 9014
+ ipv6 enable
+!
+interface GigabitEthernet0/0/0/1.10
+ no shutdown
+ mtu 9014
+ ipv6 enable
+ encapsulation dot1q 10
+!
+interface GigabitEthernet0/0/0/1.20
+ no shutdown
+ mtu 9014
+ ipv6 enable
+ encapsulation dot1q 20
+!
+interface GigabitEthernet0/0/0/2
+ no shutdown
+ ipv4 address 192.168.4.1 255.255.255.0
+!
+interface GigabitEthernet0/0/0/2.10
+ no shutdown
+ vrf vrf1
+ ipv4 address 192.168.4.1 255.255.255.0
+ encapsulation dot1q 10
+!
+interface GigabitEthernet0/0/0/2.20
+ no shutdown
+ vrf vrf2
+ ipv4 address 192.168.4.1 255.255.255.0
+ encapsulation dot1q 20
+!
+interface GigabitEthernet0/0/0/3
+ no shutdown
+ shutdown
+!
+extcommunity-set opaque color_10
+  10
+end-set
+!
+route-policy PASS-ALL
+  pass
+end-policy
+!
+route-policy SET_COLOR_10
+  set extcommunity color color_10
+  pass
+end-policy
+!
+router isis core
+ net 49.0000.0000.0000.0004.00
+ distribute link-state
+ nsf ietf
+ affinity-map red bit-position 2
+ affinity-map green bit-position 3
+ affinity-map yellow bit-position 1
+ flex-algo 128
+  priority 128
+  metric-type te
+  advertise-definition
+  prefix-metric
+  affinity include-any red yellow
+ !
+ flex-algo 129
+  priority 129
+  metric-type te
+  advertise-definition
+  prefix-metric
+  affinity include-any green yellow
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  router-id Loopback0
+  segment-routing srv6
+   locator a
+   !
+   locator ua
+   !
+  !
+ !
+ interface Loopback0
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  point-to-point
+  address-family ipv6 unicast
+   metric 10
+  !
+ !
+ interface GigabitEthernet0/0/0/0.10
+  affinity flex-algo red
+  point-to-point
+  address-family ipv6 unicast
+   te-metric flex-algo 10
+  !
+ !
+ interface GigabitEthernet0/0/0/0.20
+  affinity flex-algo green
+  point-to-point
+  address-family ipv6 unicast
+   te-metric flex-algo 20
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  point-to-point
+  address-family ipv6 unicast
+   metric 20
+  !
+ !
+ interface GigabitEthernet0/0/0/1.10
+  affinity flex-algo red
+  point-to-point
+  address-family ipv6 unicast
+   te-metric flex-algo 20
+  !
+ !
+ interface GigabitEthernet0/0/0/1.20
+  affinity flex-algo green
+  point-to-point
+  address-family ipv6 unicast
+   te-metric flex-algo 10
+  !
+ !
+!
+router bgp 65000
+ bgp router-id 1.1.1.4
+ address-family ipv4 unicast
+  segment-routing srv6
+   locator a
+   alloc mode per-vrf
+  !
+ !
+ address-family vpnv4 unicast
+  vrf all
+   segment-routing srv6
+    locator a
+   !
+  !
+ !
+ neighbor 192.168.4.2
+  remote-as 65006
+  address-family ipv4 unicast
+   route-policy PASS-ALL in
+   route-policy PASS-ALL out
+  !
+ !
+ neighbor 2001:db8:0:1::1
+  remote-as 65000
+  update-source Loopback0
+  address-family ipv4 unicast
+   encapsulation-type srv6
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+ !
+ neighbor 2001:db8:0:2::1
+  remote-as 65000
+  update-source Loopback0
+  address-family ipv4 unicast
+   encapsulation-type srv6
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+ !
+ vrf vrf1
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator a
+    alloc mode per-vrf
+   !
+  !
+  neighbor 192.168.4.2
+   remote-as 65006
+   address-family ipv4 unicast
+    route-policy PASS-ALL in
+    route-policy PASS-ALL out
+   !
+  !
+ !
+ vrf vrf2
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator ua
+    alloc mode per-vrf
+   !
+  !
+  neighbor 192.168.4.2
+   remote-as 65006
+   address-family ipv4 unicast
+    route-policy PASS-ALL in
+    route-policy PASS-ALL out
+   !
+  !
+ !
+!
+segment-routing
+ srv6
+  logging locator status
+  encapsulation
+   source-address 2001:db8:0:4::1
+  !
+  locators
+   locator a
+    prefix 2001:db8:0:4::/64
+    algorithm 128
+   !
+   locator ua
+    micro-segment behavior unode psp-usd
+    prefix fd00:0:400::/48
+    algorithm 129
+   !
+  !
+ !
+!
+end
+

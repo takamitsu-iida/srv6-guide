@@ -8,6 +8,8 @@
 
 [SRv6 L3VPN uSID](README.srv6_l3vpn_usid.md) L3VPN over SRv6 uSID構成の設定例です。
 
+[SRv6 L3VPN uSID FlexAlgo](README.srv6_l3vpn_usid_flexalgo.md) L3VPN over SRv6 uSID FlexAlgo構成の設定例です。
+
 
 【留意事項】
 
