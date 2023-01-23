@@ -3,7 +3,7 @@
 IETFでのSRv6の標準化は2014年に始まったそうです。
 その後Ciscoが製品に実装して世に出したのが2019年12月です。
 
-SoftbankやChina Telecom等、大規模な商用ネットワークでの稼働実績もあり、安心して導入できる環境が整っていると思います[1][draft-matsushima-spring-srv6-deployment-status-15.txt]。
+SoftbankやChina Telecom等、大規模な商用ネットワークでの稼働実績もあり、安心して導入できる環境が整っていると思います[【１】][draft-matsushima-spring-srv6-deployment-status-15.txt]。
 
 [draft-matsushima-spring-srv6-deployment-status-15.txt]: https://www.ietf.org/archive/id/draft-matsushima-spring-srv6-deployment-status-15.txt
 
