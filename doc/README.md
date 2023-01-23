@@ -664,41 +664,21 @@ A面-B面のような面構成をさらに増やしていくのがいいのか�
 
 エッジルータがVPN用にVRFを作成すると、VRFごとにSIDが割り当てられます（End.DT4 per-VRFの場合）。
 
-このSIDはBGPで自分以外の全てのエッジルータに配信されます。
+このSIDはiBGPで自分以外の全てのエッジルータに配信されます。
 
-エッジルータはそのSIDに向けてIP-in-IPでカプセル化してVPNのパケットを送信します。
+対向ルータがVPNの通信を送信するときには、IPv6で包んでこのSIDに向けて送信します。
 
 <br>
 
-> **Note**
+> **Note** ココ重要
 >
-> SRv6を使っていない場合は、iBGPで経路を配信したエッジルータのアドレスがnext-hopになります。
-> SRv6ではnext-hopがSIDに置き換わります。
+> iBGPのNext Hopではなく、SIDに向けてパケットを送信します。
 
-ロケータの情報はISISで配られていますので、その経路に従ってIP-in-IPパケットがネットワークに流れていきます。
+ロケータの情報はISISで全ルータに配られていますので、その経路に沿ってIPv6パケットが流れていきます。
 
 この時点ではまだSRv6のヘッダは登場しません。
-途中経路上でパケットをキャプチャしても単なるIP-in-IPのパケットしか観察できません。
-特別な経路を通って到達させたいときに初めてSRv6が使われます。
-
-「あのSIDにたどり着くためには、ここを通過せよ」という情報をルータに設定するのは、
-スタティックルーティングのときとまったく同じですが、
-VPNの場合には、より柔軟なポリシーを作れるようになっています。
-
-1. BGPで学習したNext-HopとなるSIDであり、かつ
-2. BGPのColor属性が一致した場合、
-3. この経路を使用せよ、
-
-というポリシーをエッジルータに作成しておきます。
-BGPの経路にカラー属性を付与することで、通る場所を制御できるようになります。
-
-<br>
-
-> **Note**
->
-> BGPで経路を配信する側が、通り道を制御する、ということです。
-
-何かしら特別な契約がある場合はカラー属性を付与して特別な経路を通過、そうでなければベストエフォートの経路を通過、というようなユースケースに使えそうです。
+途中経路上でパケットをキャプチャしても単なるIPv6パケット（IP-in-IP）しか観察できません。
+特別な経路を通って到達させたいときに初めてSRv6のヘッダが使われます。
 
 <br>
 
@@ -721,7 +701,7 @@ SIDのテーブルを表示するとPSPマークが出てきます。最終目�
 
 マイクロSID(Micro-SID)をuSIDと表記します。uはマイクロの記号μの代用です。
 
-フルレングスのSIDひとつの中に、コンパクトなSIDを複数格納することで効率とスケーラビリティの向上が期待できます。
+IPv6のアドレス形式と同じサイズの中に、コンパクトなSIDを複数格納することで、SRv6ヘッダを使うことなく通り道を指定できます。
 
 uSIDは
 `<uSID-Block><Active-uSID><Next-uSID>...<Last-uSID><End-of-Carrier>...<End-of-Carrier>`
@@ -734,7 +714,7 @@ uSIDの形式は `F bb uu` の形式で表現され、F3216と表記した場合
 
 > **Note**
 >
-> IOS XR 7.3で実装されているuSIDはF3216形式のみです。
+> IOS-XR 7.3で実装されているuSIDはF3216形式のみです。
 
 uSIDに関連付けられたエンドポイントの動作は、それ用に定義されています。
 
@@ -743,7 +723,7 @@ uSIDに関連付けられたエンドポイントの動作は、それ用に定�
 - uDT : End.DT 動作のNEXT-CSID表記
 - uDX : End.DX 動作のNEXT-CSID表記
 
-具体的な例で考えてみます。F3216を想定すると、ISPから入手する/48のアドレスは使えませんので、RFC4193(Unique Local IPv6 Unicast Addresses)のローカルアドレスを利用します。
+具体的な例で考えてみます。F3216を想定すると、ISPから入手する/48のアドレスは使えませんので、RFC4193のユニークローカルアドレスを利用します。
 RFC4193に従うと0xFDに続けてランダムな数字を生成するべきですが、ここでは見やすいように先頭32ビットをFD00:0000:とします。
 
 > **Note**
@@ -752,7 +732,7 @@ RFC4193に従うと0xFDに続けてランダムな数字を生成するべきで
 
 ![micro-SID](img/usid.drawio.png)
 
-各ノードには16ビットのuNが割り当てられます。PE03のvrfにはuDT4で`0303`が割り当てられ、PE05のvrfには`0505`が割り当てられたとします。
+各ノードには16ビットのuNが割り当てられます。仮にPE03のvrfにはuDT4で`0303`が割り当てられ、PE05のvrfには`0505`が割り当てられたとします。
 
 PE03がPE05のvrfにたどり着く経路として PE03-CR01-CR02-CR01-PE05 を指定すると、宛先になるIPv6アドレスは `fd00:0000:0100:0200:0100:0500:0505:0000` となります。
 
@@ -764,102 +744,19 @@ PE03がPE05のvrfにたどり着く経路として PE03-CR01-CR02-CR01-PE05 を�
 - ⑥の0505はPE05のvrfのuDTです。
 
 このアドレスの経路情報を探索すると、ロンゲストマッチのルールで先頭48ビット `fd00:0000:0100` の経路情報に一致します。
-これはCR01がISISで配信しているはずのものです。したがってPE03から送信されたパケットはまずCR01に向かいます。
-CR01は自身のuNの次に来るuNを見て次に転送すべきノードを0200、すなわちCR02と特定します。
-宛先アドレスから自身のuNを取り除き、新たな宛先アドレスとして `fd00:0000:0200:0100:0500:0505:0000:0000` を組み立てて転送します。こうして最終目的地のPE05までたどり着くと、PE05のuNである0500の次にくる0505が自身のuDTであることを特定し、vrfに中継します。
+これはCR01がISISでロケータの情報として配信したものです。したがってPE03から送信されたパケットはまずCR01に向かいます。
+CR01は自身のuNの次を見て、転送すべきノードを0200、すなわちCR02と特定します。
+宛先アドレスを4ビット左にシフトして自身のuNを取り除き、新たな宛先アドレス `fd00:0000:0200:0100:0500:0505:0000:0000` に転送します。
+こうして最終目的地のPE05までたどり着くと、PE05は自身のuNの次にくる値0505がuDTであることを特定し、vrfに中継します。
 
-このようにuSIDを使うとSRv6ヘッダを使うことなく、宛先IPv6アドレスだけで経由地を複数指定できます。
+このようにuSIDを使うとSRv6ヘッダを使うことなく、宛先IPv6アドレスだけで経由地を指定できます。
 
 > **Note**
 >
 > F3216形式のuSIDであれば一つの宛先に5個まで経由地を指定できます。
 
+なお、フルレングスSIDとマイクロSIDは排他ではありませんので、ロケータごとに使い分けることも可能です。
 
-
-TODO: 記述不足
-
-<br>
-
-## 疎通確認の方法
-
-IOS-XRの場合は、ポリシー名を指定してping、tracerouteを打てます。
-
-```
-RP/0/RP0/CPU0:PE04#ping segment-routing srv6 policy name ?
-  WORD  Srv6 TE configured or auto-generated policy name
-
-RP/0/RP0/CPU0:PE04#traceroute segment-routing srv6 policy name a ?
-  flowlabel  flowlabel of the packet
-  maxttl     maximum time to live
-  minttl     minimum time to live
-  numeric    Numeric display only
-  port       port number
-  priority   priority of the packet
-  probe      probe count
-  reduced    ping segment routing policy with reduced option
-  source     source address or interface
-  timeout    timeout value in seconds
-  verbose    verbose output
-  vrf        vrf table for the route lookup
-  <cr>
-```
-
-Path Tracingという機能が実装されると、どこを通っているかが分かるようになる。
-
-SIDへのpingはできない。
-
-```
-f220-pe2#show segment-routing srv6 sid
-
-SID                         Function     Context                                             Owner  State
---------------------------  -----------  --------------------------------------------------  -----  ---------
-3ffe:220:1:1:40::           End                                                              IS-IS  InUse
-3ffe:220:1:1:41::           End (PSP)                                                        IS-IS  InUse
-3ffe:220:1:1:46::           End.DT4      '1'                                                 BGP    InUse
-3ffe:220:1:1:47::           End.DT4      '2'                                                 BGP    InUse
-3ffe:220:1:1:48::           End.DT6      '1'                                                 BGP    InUse
-3ffe:220:1:1:49::           End.DT6      '2'                                                 BGP    InUse
-3ffe:220:1:1:4a::           End.X        [Port-channel 1020000, Link-Local]                  IS-IS  InUse
-3ffe:220:1:1:4b::           End.X (PSP)  [Port-channel 1020000, Link-Local]                  IS-IS  InUse
-3ffe:220:1:1:4c::           End.X        [Port-channel 1010000, Link-Local]                  IS-IS  InUse
-3ffe:220:1:1:4d::           End.X (PSP)  [Port-channel 1010000, Link-Local]                  IS-IS  InUse
-f220-pe2#ping ipv6 3ffe:220:1:1:40::
-Sending 5, 100-byte ICMP Echos to 3ffe:220:1:1:40::(3ffe:220:1:1:40::), timeout is 2 seconds:
-*** No route to host.
-.*** No route to host.
-
-Success rate is   0 percent (0/2)
-
-f220-pe2#ping 3ffe:220:1:1:41::
-Sending 5, 100-byte ICMP Echos to 3ffe:220:1:1:41::(3ffe:220:1:1:41::), timeout is 2 seconds:
-*** No route to host.
-
-Success rate is   0 percent (0/1)
-```
-
-
-## OAM (Operations, Administration, and Maintenance)
-
-ファブリックネットワークは、全体を一つの装置として見るので、個々の装置の管理ではなく、複数の装置を同時に扱う必要がある。
-パケットが入ってきた場所と、出ていく場所は異なる装置なのが通常なので、その両方の装置をケアしなければいけない。
-
-ベンダー独自技術の場合はコントローラが付属する。Cisco ACIの場合はAPICがコントローラ。
-
-オープン技術を採用する場合には、マルチベンダ製品を扱うオーケストレータを使う場合が多い。
-
-Cisco NSO(Network Services Orchestrator)
-
-JuniperはCSO(Contail Service Orchestration)
-
-ただ、現場作業時にNSOを持ち込むのはオーバースペックなので、簡易なツールも必要。
-pyATSを使って各種操作を自動化するとよい。
-
-作成済みスクリプトの例
-- ファブリック内のSIDを全て収集
-- BGP状態の確認
-- ISIS状態の確認
-- パラメータシートからのVPNプロビジョニング
-- end-to-endの疎通確認
 
 <br><br><br><br>
 
