@@ -250,9 +250,9 @@ RP/0/RP0/CPU0:PE03#
 algo 128のISISで学習して、中継先はGig0/0/0/0.10、つまりredのaffinityを持ったインタフェースに転送されることがわかります。
 これはリングの上ルートを通る経路です。
 
-<br><br>
+<br>
 
-次に、vrf2にたどり着くためのSID `fd00:0:400:e000::` にたどり着くための経路を調べます。
+次に、vrf2のSID `fd00:0:400:e000::` にたどり着くための経路を調べます。
 
 ```
 RP/0/RP0/CPU0:PE03#show route ipv6 fd00:0:400:e000::
@@ -276,7 +276,7 @@ algo 129のISISで学習して、中継先はGig0/0/0/1.20、つまりgreenのaf
 
 vrf1のpingパケットです。これはリングの上ルートを通ります。
 
-![algo 128 ping](img/algo128_ping.png)
+![algo 128 ping](img/algo128_ping.PNG)
 
 ICMP Echo RequestとReplyが同じところでキャプチャできていますので、戻りの通信も非対称になることなく、適切にルーティングされていることがわかります。
 
@@ -284,7 +284,7 @@ ICMP Echo RequestとReplyが同じところでキャプチャできています�
 
 vrf2のpingパケットです。これはリングの下ルートを通ります。
 
-![algo 129 ping](img/algo129_ping.png)
+![algo 129 ping](img/algo129_ping.PNG)
 
 <br>
 
