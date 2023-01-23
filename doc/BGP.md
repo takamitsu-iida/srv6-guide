@@ -1,11 +1,10 @@
-
 # BGP
 
+PEルータ間で交換するVPN情報についてのメモです。
 
-## End.DT4ファンクション
+## End.DTファンクション
 
-
-L3VPNの情報はshow ip bgp vpnv4 all で確認できる。
+FITELnetの装置では `show ip bgp vpnv4 all` でアドレスファミリVPNv4の情報を確認できる。
 
 ```
 fx201-pe1#show ip bgp vpnv4 all 220.0.1.0
@@ -34,6 +33,7 @@ BGP routing table entry for 220.0.1.0/24
 - L:40.24 の意味
 
 > マニュアルから引用
+>
 > SRv6 SID Structure Sub-Sub-TLV の LocBlock len, LocNode len を示しています
 
 ロケータのBlock部が40ビット、Node部が24ビットという意味。2つ合わせて40+24=64ビットがロケータの長さ。

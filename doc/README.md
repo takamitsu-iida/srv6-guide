@@ -9,37 +9,6 @@ A source-routing architecture that seeks the right balance between distributed i
 
 （分散インテリジェンスと集中最適化の間の適切なバランスを追求するソース ルーティング アーキテクチャ。Google翻訳）
 
-<!--
-CiscoのSRv6のFCS(First Customer Shipping)は2019年12月です。
-LinuxがSRv6をサポートしているので、LinuxベースのNFVは今後増えてきます。
-    - Snort
-    - SERA iptables
-    - nftables
-    - pyroute2
-    - netfilter
-    - FD.io VPP
-
-Classifier
-    - ENEA https://www.enea.com/solutions/dpi-traffic-intelligence/
-        組み込み用
-
-速度
-    - Cisco Nexusは400GをラインレートでSRv6中継できる
-
-チップベンダー
-    - Barefoot Networks 2019年にIntelに買収された
-    - Broadcom
-
-NIC
-    - Mellanox
-    - Intel
-
-NFV Partner
-    - TRENDMICRO
-    - ENEA
-
--->
-
 <br>
 
 ## ひとことでいうと
@@ -455,7 +424,7 @@ VRF単位にファンクションを割り当てるのがEnd.DT、CE装置単位
 
 > **Note**
 >
-> 装置の実装にper-vrfかper-ceかは異なりますので、マニュアルを参照しましょう。IOS-XRはper-ce、FITELnetはper-vrfがデフォルトの動作です。
+> 装置の実装によってデフォルトの動作がper-vrfかper-ceか異なりますので、マニュアルを参照しましょう。IOS-XRはper-ce、FITELnetはper-vrfがデフォルトの動作です。
 
 <br>
 
@@ -780,7 +749,7 @@ uSIDに関連付けられたエンドポイントの動作は、それ用に定�
 具体的な例で考えてみます。F3216を想定すると、ISPから入手する/48のアドレスは使えませんので、RFC4193(Unique Local IPv6 Unicast Addresses)のローカルアドレスを利用します。
 RFC4193に従うと0xFDに続けてランダムな数字を生成するべきですが、ここでは見やすいように先頭32ビットをFD00:0000:とします。
 
-> **Mote**
+> **Note**
 >
 > uSIDではRFC4193 ユニークローカルアドレスの利用が推奨されます。
 
