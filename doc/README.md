@@ -734,48 +734,48 @@ CR01は自身のuNの次を見て、転送すべきノードを0200、すなわ�
 
 # RFC
 
-RFC8986は必読です。
+RFC8986 Segment Routing over IPv6 (SRv6) Network Programming は必読です。
 
 ## アーキテクチャ関連
 
-RFC 8402 Segment Routing Architecture
+[RFC 8402 Segment Routing Architecture](https://datatracker.ietf.org/doc/rfc8402/)
 
-RFC 7855 Source Packet Routing in Networking (SPRING) Problem Statement and Requirements
+[RFC 7855 Source Packet Routing in Networking (SPRING) Problem Statement and Requirements](https://datatracker.ietf.org/doc/rfc7855/)
 
-RFC 8660 Segment Routing with MPLS data plane
+[RFC 8660 Segment Routing with MPLS data plane](https://datatracker.ietf.org/doc/rfc8660/)
 
-RFC 8754 IPv6 Segment Routing Header (SRH)
+[RFC 8754 IPv6 Segment Routing Header (SRH)](https://datatracker.ietf.org/doc/rfc8754/)
 
-RFC 8986 Segment Routing over IPv6 (SRv6) Network Programming
+[RFC 8986 Segment Routing over IPv6 (SRv6) Network Programming](https://datatracker.ietf.org/doc/rfc8986/)
 
 ## ISIS関連
 
-RFC 7810 IS-IS Traffic Engineering (TE) Metric Extensions
+[RFC 7810 IS-IS Traffic Engineering (TE) Metric Extensions](https://datatracker.ietf.org/doc/rfc7810/)
 
-RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS
+[RFC 8491 Signaling MSD (Maximum SID Depth) using IS-IS](https://datatracker.ietf.org/doc/rfc8491/)
 
-RFC 8667 IS-IS Extensions for Segment Routing
+[RFC 8667 IS-IS Extensions for Segment Routing](https://datatracker.ietf.org/doc/rfc8667/)
 
-RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS
+[RFC 8668 Advertising L2 Bundle Member Link Attributes in IS-IS](https://datatracker.ietf.org/doc/rfc8668/)
 
 ## BGP関連
 
-RFC 8571 BGP-LS Advertisement of IGP Traffic Engineering Performance Metric Extensions
+[RFC 8571 BGP-LS Advertisement of IGP Traffic Engineering Performance Metric Extensions](https://datatracker.ietf.org/doc/rfc8571/)
 
-RFC 8669 Segment Routing Prefix SID extensions for BGP
+[RFC 8669 Segment Routing Prefix SID extensions for BGP](https://datatracker.ietf.org/doc/rfc8669/)
 
 ## OSPF関連
 
-RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions
+[RFC 7471 OSPF Traffic Engineering (TE) Metric Extensions](https://datatracker.ietf.org/doc/rfc7471/)
 
-RFC 8665 OSPF Extensions for Segment Routing
+[RFC 8665 OSPF Extensions for Segment Routing](https://datatracker.ietf.org/doc/rfc8665/)
 
-RFC 8666 OSPFv3 Extensions for Segment Routing
+[RFC 8666 OSPFv3 Extensions for Segment Routing](https://datatracker.ietf.org/doc/rfc8666/)
 
-RFC 8476 Signaling MSD (Maximum SID Depth) using OSPF
+[RFC 8476 Signaling MSD (Maximum SID Depth) using OSPF](https://datatracker.ietf.org/doc/rfc8476/)
 
 ## OAM関連
 
-RFC 8287 Label Switched Path (LSP) Ping/Trace for Segment Routing Networks Using MPLS Dataplane
+[RFC 8287 Label Switched Path (LSP) Ping/Trace for Segment Routing Networks Using MPLS Dataplane](https://datatracker.ietf.org/doc/rfc8287/)
 
-RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System
+[RFC 8403 A Scalable and Topology-Aware MPLS Dataplane Monitoring System](https://datatracker.ietf.org/doc/rfc8403/)
