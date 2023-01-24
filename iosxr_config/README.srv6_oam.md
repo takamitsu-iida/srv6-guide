@@ -241,8 +241,15 @@ Success rate is 0 percent (0/5)
 キャプチャして追いかけてみますと、ちゃんと期待した通りの経路を通って最終目的地のPE04まで届いています。
 ですが応答はありません。
 
-理由は不明ですが、もともとマニュアルにも以下のような制限が記載されていますので、仕方ないのかもしれません。
+![ping checksum error](img/ping_checksum_error.PNG)
 
+理由はこのキャプチャの通り、ICMPv6のチェックサムが再計算されていないためです。
+uSIDで指定された途中のノードはIPv6ヘッダの宛先をビットシフトして転送するわけですが、これによってペイロードのICMPv6のチェックサムが合わなくなっているためです。
+
+> **Note**
+>
+> ちなみにマニュアルに以下のような制限が記載されていますので、もともと期待してはいけないものです。
+>
 > https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x/using-segment-routing-oam.html#id_128984
 >
 > The following restriction applies for SRv6 OAM:
@@ -251,7 +258,39 @@ Success rate is 0 percent (0/5)
 
 <br>
 
-## SID情報
+## SIDへのssh
+
+できません。
+
+PE04からPE03のLoopback0にsshすると、ログインできます。
+
+```
+RP/0/RP0/CPU0:PE04#ssh 2001:db8:0:3::1
+Password:
+
+
+RP/0/RP0/CPU0:PE03#exit
+```
+
+<br>
+
+PE04からPE03のnode-SIDにsshすると・・・
+
+```
+RP/0/RP0/CPU0:PE04#ssh 2001:db8:0:3:1::
+RP/0/RP0/CPU0:Jan 24 14:30:06.047 JST: ssh_xr[65757]: %SECURITY-SSHD-3-ERR_ERRNO : Failed to connect to 2001:db8:0:3:1:: - Connection failed
+Failed to connect to 2001:db8:0:3:1:: - Connection failed
+
+RP/0/RP0/CPU0:PE04#
+```
+
+残念。接続できません。TCP22番ポートのSYNに対して無応答です。
+
+node-SIDといえど、ルータ自身がホストとして振る舞うときのアドレスではない、という理解でいいと思います。
+
+<br><br><br><br>
+
+# srv6関連のshowコマンド
 
 SIDは各装置のロケータから動的に採番されますが、
 SIDマネージャやISISやBGP等、複数のプロトコルがそれぞれのコンテキストに採番しますので、詳細な情報は各プロトコルのshowコマンドを使います。

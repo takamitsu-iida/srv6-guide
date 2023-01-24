@@ -36,6 +36,4 @@ IOS XR Version 7.7.1
 
 ## 参照したマニュアル
 
-https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/iosxr/ncs560/segment-routing/73x/b-segment-routing-cg-73x-ncs560/m-configuring-srv6-traffic-engineering-ncs5xx.html.xml#id_125396
-
-https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x/configure-srv6-micro-sid.html
+https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x.html

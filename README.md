@@ -6,9 +6,7 @@ SoftbankやChina Telecom等、大規模な商用ネットワークでの稼働�
 
 [draft-matsushima-spring-srv6-deployment-status-15.txt]: https://www.ietf.org/archive/id/draft-matsushima-spring-srv6-deployment-status-15.txt
 
-SRv6の応用範囲は広いにもかかわらず、一般的な企業ネットワークでの稼働実績はほとんどありません。
-
-だから知らなくて良い、というわけではありません。
+SRv6の応用範囲は広いにもかかわらず一般的な企業ネットワークでの稼働実績はほとんどないのですが、だから知らなくて良い、というわけではありません。
 
 直接目に触れることのない部分でVXLANやMPLSが稼働しているインフラは多数あります。
 それらの一部は今後SRv6に移行していくでしょう。
