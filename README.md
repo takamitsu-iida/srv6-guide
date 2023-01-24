@@ -14,36 +14,6 @@ SRv6の応用範囲は広いにもかかわらず一般的な企業ネットワ�
 
 ネットワーク分野のエンジニアであれば知識としてしっかりと身につけておいたほうがよいと思います。
 
-<!--
-CiscoのSRv6のFCS(First Customer Shipping)は2019年12月です。
-LinuxがSRv6をサポートしているので、LinuxベースのNFVは今後増えてきます。
-    - Snort
-    - SERA iptables
-    - nftables
-    - pyroute2
-    - netfilter
-    - FD.io VPP
-
-Classifier
-    - ENEA https://www.enea.com/solutions/dpi-traffic-intelligence/
-        組み込み用
-
-速度
-    - Cisco Nexusは400GをラインレートでSRv6中継できる
-
-チップベンダー
-    - Barefoot Networks 2019年にIntelに買収された
-    - Broadcom
-
-NIC
-    - Mellanox
-    - Intel
-
-NFV Partner
-    - TRENDMICRO
-    - ENEA
--->
-
 <br><br>
 
 # [SRv6とは](doc/README.md)
@@ -55,16 +25,3 @@ NFV Partner
 <br><br>
 
 # [IOS-XR設定例](iosxr_config/README.md)
-
-<!--
-広域のSRv6で活用場面はないか？
-
-各拠点にインターネット回線を引き込んでSRv6を構成すると、
-SRv6 --- (インターネット) --- SRv6
-という構成ができる。
-
-このとき何かいいことできないかな？
-ロケータにグローバルIPv6を使うと、インターネットのどこからでもSID目掛けて通信できるわけで、この特性を使って何かできないかしら？
-クラウド側にロケータが配置されたとして、何かできないかしら？
-
--->
