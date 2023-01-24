@@ -209,24 +209,29 @@ iBGPにおけるルートリフレクタのようなイメージで経路計算�
 - 基盤ネットワーク設計
     - 物理ネットワーク
         - DC内ネットワーク
-            - 面設計(1系-2系 or A面-B面)
+            - 面設計
+                - 1系-2系 or A面-B面
+                - 面のスケールアウト方式
             - トポロジ
                 - ラダー型 or ツリー型
                 - ルータ種別、命名規則
-                    - CR P = コアルータ
-                    - PE = エッジルータ
-                    - WANルータ
-                - コアトポロジ
-                    - Cルータ間接続
-                - PEトポロジ
-                    - Cルータ向け接続
-                    - CEルータ向け接続
+                    - CR or P = コアルータ
+                    - ER or PE = エッジルータ
+                    - WR = WANルータ
+                    - CE = カスタマーエッジルータ
+                - コア部
+                    - CRルータ間接続
+                - エッジ部
+                    - PE-CR間接続
+                    - PE-CE間接続
                         - L3VPNシングルセグメント
                             - VRRP or Anycast Gateway
                         - L3VPNマルチセグメント
+                            - eBGP
                         - EVPN
                             - ESI LAG
-                        - L3VPN + EVPN
+                        - L3VPN + EVPN同時利用
+
             - 物理インタフェース
                 - 速度
                 - ファイバ種別、コネクタ形状
@@ -267,13 +272,19 @@ iBGPにおけるルートリフレクタのようなイメージで経路計算�
             - ロケータ設計
                 - 用途ごとのロケータ
                 - uSID利用
-            - TOS制御
+            - encap sourceアドレス
+            - logging
+                - SID status
             - PSP（EVPN時に制約あり？）
             - 静的SID割り当て
+                - node-SID/ajd-SID
+                - End.DT
+            - FlexAlgo
+                - TE metric
+                - affinity
             - SR-TE
                 - PCE
                 - BGPオンデマンドポリシー
-            - FlexAlgo
 
         - iBGP
             - AS番号
@@ -316,8 +327,9 @@ iBGPにおけるルートリフレクタのようなイメージで経路計算�
                 - anycast gateway address
                     - IP/MAC
 
+            - MTU
             - ToS/DSCP反映有無
-            - TCP MSS変換
+            - TCP MSS変換有無
 
         - EVPN
             - Bridge Group
@@ -431,7 +443,8 @@ iBGPにおけるルートリフレクタのようなイメージで経路計算�
             - メモリ
     - ログ
         - SYSLOG
-        -
+        - gRPC or NETCONF
+
     - ライフサイクル管理
         - ソフトウェアバージョンアップ
     - メンテナンス停止
