@@ -16,11 +16,13 @@ vrf1はred経路、vrf2はgreen経路を通るようにします。
 
 ## IOS-XRの制約条件
 
-FlexAlgoのロケータ数は最大8です。
+- ISIS と OSPF でサポートしています
 
-全てのロケータのブロック部（先頭40ビット）は同一でなければいけません。
+- FlexAlgoのロケータ数は最大8です。
 
-アルゴリズム値は 128 ～ 255 です。
+- 全てのロケータのブロック部（先頭40ビット）は同一でなければいけません。
+
+- アルゴリズム番号は 128 ～ 255 です。
 
 <br>
 
@@ -32,6 +34,8 @@ FlexAlgoのロケータ数は最大8です。
 
 ## ロケータの変更
 
+ロケータにアルゴリズム番号を紐づけます。
+
 ロケータaはアルゴリズム128、ロケータuaはアルゴリズム129に変更します。
 
 この設定は全ルータ共通です。
@@ -42,11 +46,11 @@ RP/0/RP0/CPU0:CR01(config-srv6)#locators
 RP/0/RP0/CPU0:CR01(config-srv6-locators)#locator a
 RP/0/RP0/CPU0:CR01(config-srv6-locator)#algorithm 128
 RP/0/RP0/CPU0:CR01(config-srv6-locator)#exit
+
 RP/0/RP0/CPU0:CR01(config-srv6-locators)#locator ua
 RP/0/RP0/CPU0:CR01(config-srv6-locator)#algorithm 129
 RP/0/RP0/CPU0:CR01(config-srv6-locator)#root
 RP/0/RP0/CPU0:CR01(config)#commit
-Sun Jan 22 13:23:22.126 JST
 ```
 
 <br>
@@ -55,7 +59,7 @@ Sun Jan 22 13:23:22.126 JST
 
 アルゴリズム128と129を有効にします。
 
-metric-typeをteにします。
+ISISの各アルゴリズムのmetric-typeをteにします。
 
 この設定は全ルータ共通です。
 

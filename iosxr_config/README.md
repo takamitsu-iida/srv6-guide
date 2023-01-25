@@ -31,6 +31,7 @@
 ## 検証環境
 
 IOS XR Version 7.7.1
+IOS XR Version 7.8.1
 
 <br><br>
 
