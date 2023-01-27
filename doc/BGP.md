@@ -4,7 +4,7 @@ PEルータ間で交換するVPN情報についてのメモです。
 
 ## End.DTファンクション
 
-FITELnetの装置では `show ip bgp vpnv4 all` でアドレスファミリVPNv4の情報を確認できる。
+FITELnetの装置では `show ip bgp vpnv4 all` でアドレスファミリVPNv4の情報を確認できます。
 
 ```
 fx201-pe1#show ip bgp vpnv4 all 220.0.1.0
@@ -26,9 +26,9 @@ BGP routing table entry for 220.0.1.0/24
 
 `BGP Prefix-SID: SRv6 L3VPN 3ffe:220:1:1:: (L:40.24, F:16.0, T:16.64) End.DT4`
 
-という部分に注目。Prefix-SIDはロケータのことで、ルータそのものを指す。
+という部分に注目します。Prefix-SIDはロケータのことです。
 
-`3ffe:220:1:1::` は対向するPEルータ、つまりこの情報を教えてくれたルータを指している。
+`3ffe:220:1:1::` は対向するPEルータ、つまりこの情報を教えてくれたルータを指しています。
 
 - L:40.24 の意味
 
@@ -36,23 +36,28 @@ BGP routing table entry for 220.0.1.0/24
 >
 > SRv6 SID Structure Sub-Sub-TLV の LocBlock len, LocNode len を示しています
 
-ロケータのBlock部が40ビット、Node部が24ビットという意味。2つ合わせて40+24=64ビットがロケータの長さ。
-どのメーカーのSRv6ルータでもこうなっているはず。
+ロケータのBlock部が40ビット、Node部が24ビットという意味になります。
+2つ合わせて40+24=64ビットがロケータの長さです。
+
+IOS-XRも同様にBlock部は40ビットで固定になっています。
 
 - F:16.0 の意味
 
 > マニュアルから引用
 > SRv6 SID Structure Sub-Sub-TLV の Function len, Argument len を示しています
 
-Function部の長さが16ビット、引数となるArgumentの長さが0ビット、という意味。2つ合わせて16+0=16ビットがFunction部の長さ。
-この部分はメーカーによって違うかもしれない。
+Function部の長さが16ビット、引数となるArgumentの長さが0ビット、という意味です。
+2つ合わせて16+0=16ビットがFunction部の長さです。
+
+この部分はメーカーによって違うかもしれません。
 
 - T:16.64 の意味
 
 > マニュアルから引用
 > SRv6 SID Structure Sub-Sub-TLV の Trans len, Trans Offset を示しています
 
-RFC9252(BGP Overlay Services Based on Segment Routing over IPv6) を読まないと、この意味はわからない。
+Trans lenとTrans Offsetと言われても何のことか分からないと思いますが、
+RFC9252(BGP Overlay Services Based on Segment Routing over IPv6) にその意味が書かれています。
 
 RFC9252から引用。
 
@@ -66,34 +71,28 @@ RFC9252から引用。
       that has been transposed (or shifted) into an MPLS Label field.
 ```
 
-BGPを使ってVPNの経路情報を交換するときには、VPNを識別する情報としてMPLSのラベルを付与する。
+MPLSは20ビットのラベルを使います。
+20ビットのフィールドに128ビットのSIDは収まりませんので、SIDの一部だけを格納するわけですが、
+長いSIDのどの部分を格納しているのかをTrans LenとTrans Offsetで表現します。
 
-MPLSのラベルの長さは20ビット。
-
-セグメントIDの長さは128ビット。
-
-当然収まりきらないので工夫して格納する。ここがすごく分かりづらいところ。
-
-128ビットのSIDのうち、どの部分からどの部分までを20ビットのラベル部に格納したのかを表すのがTrans lenとTrans Offset。
-
-T:16.64は、SIDの先頭64ビットから16ビットを切り出したもの、という意味になる。これはちょうどFunction部を表している。
+T:16.64の意味は、SIDの先頭64ビットから16ビットを切り出したもの、という意味になります。
+これはちょうどFunction部を表しています。
 
 - Remote Label: 1120 の意味
 
-対向ルータが送ってきたラベルの値のこと。
+対向ルータが送ってきたラベルの値のことで、これは20ビットフィールドです。
 
-10進数の `1120` は16進数では `0x 0460`、2進数では `0b 0000 0100 0110 0000` になる。
+10進数の `1120` は16進数では `0x 460`、2進数では `0b 0000 0100 0110 0000` になります。
 
-20ビットの器に入っているので正確には先頭にもう少し0が存在して、`0x 00460` = `0b 0000 0000 0100 0110 0000` となる。
+20ビットの器に入っているので正確にはもう少し先頭に0が存在して、`0x 00460` = `0b 0000 0000 0100 0110 0000` になります。
 
-T:16.64と指定された通り、128ビットのSIDの先頭64ビットから16ビット分がここに格納されていることになるので、先頭から16ビット分を取り出す。
-すなわち下4ビットを破棄すると、2進数で `0000 0000 0100 0110`、16進数で`0x0046` となる。
+T:16.64と指定された通り、128ビットのSIDの先頭64ビットから16ビット分がここに格納されていますので、先頭から16ビット分を取り出します。
+すなわち下4ビットを破棄すると、2進数で `0000 0000 0100 0110`、16進数で`0x0046` となります。
 
-IPv6のアドレスは連続するゼロを省略するのでFunction部は`0x46`ということになる。
+ロケータとラベル情報からSIDを組み立てると、
+ロケータの`3ffe:220:1:1::`にラベルの`0x46`を連結して`3ffe:220:1:1:46::`がEnd.DT4のSIDになります。
 
-ロケータとラベル情報からSIDを組み立てると、ロケータの`3ffe:220:1:1::`にラベルの`0x46`を連結して`3ffe:220:1:1:46::`がEnd.DT4のSIDになる。
-
-IOS-XRの場合。
+次にIOS-XRの場合です。
 
 ```
 RP/0/RP0/CPU0:PE04#show bgp vrf vrf1 192.168.5.0/24
@@ -124,15 +123,15 @@ Paths: (2 available, best #1)
       Source AFI: VPNv4 Unicast, Source VRF: vrf1, Source Route Distinguisher: 100:1
 ```
 
-Trans LenとTrans Offsetが不明だが、おそらくFITELnetと同じでT:16.64のはず。
+Trans LenとTrans Offsetの記載がありませんが、FITELnetと同じでT:16.64になっているはずです。
 
-`Received Label 0x420` からこのプレフィクスに紐づいたラベル値は0x420 = 0x00420であることがわかる。
+`Received Label 0x420` からこのプレフィクスに紐づいたラベル値は0x420 = 0x00420であることがわかります。
 
-頭から16ビット分を取り出す、すなわち下4ビットを破棄して0x0042がFunction部ということになる。
+頭から16ビット分を取り出す、すなわち下4ビットを破棄して0x0042がFunction部です。
 
-`T:1(Sid information), Sid:2001:db8:0:3::, Behavior:19, SS-TLV Count:1` からロケータは2001:db8:0:3であることがわかる。
+`T:1(Sid information), Sid:2001:db8:0:3::, Behavior:19, SS-TLV Count:1` からロケータは2001:db8:0:3であることがわかります。
 
-ロケータとラベルの情報から、この経路に紐づくSIDは `2001:db8:0:3:42` となる。
+ロケータとラベルの情報から、この経路に紐づくSIDは `2001:db8:0:3:42` とわかります。
 
 
 RFC9252 BGP Overlay Services Based on Segment Routing over IPv6 (SRv6)
@@ -187,8 +186,9 @@ Transposition Scheme of encoding (Section 4) というのはこの部分。
 
 Transposition Schemeは転置スキームと訳すのかな。
 
-End.DT4のようにPer-CEやPer-VRFでSIDを割り当てるサービスでは、プレフィクスに対して同じSIDを割り当てることになるので、同じ情報を何度も繰り返し送信すのは無駄になる。
-転置スキームを使って一度送ったらそれを再利用する。
+End.DT4のようにPer-CEやPer-VRFでSIDを割り当てるサービスでは、
+プレフィクスに対して同じSIDを割り当てることになるので、同じ情報を何度も繰り返し送信するのは効率が悪いです。
+転置スキームを使って一度送ったらそれを再利用します。
 
 ```
 3.2.1.  SRv6 SID Structure Sub-Sub-TLV
@@ -247,5 +247,5 @@ End.DT4のようにPer-CEやPer-VRFでSIDを割り当てるサービスでは、
       that has been transposed (or shifted) into an MPLS Label field.
 ```
 
-SIDのFunction部の情報を送るときに、20ビットのMPLSのラベル情報に置換する際のビットシフトの量をTransposition Lengthで指定する。
-ここが4になっているはず。
+SIDのFunction部の情報を送るときに、
+20ビットのMPLSのラベル情報に置換する際のビットシフトの量をTransposition Lengthで指定します。
