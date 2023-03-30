@@ -374,7 +374,7 @@ Type=simple
 WantedBy=multi-user.target
 ```
 
-呼び出すスクリプトは前述の`/nic/bin/create_vrf.sh`です。
+ファイルのオーナとモードを設定します。
 
 ```bash
 chown root:root /etc/systemd/system/create_vrf.service
@@ -388,14 +388,13 @@ systemctl daemon-reload
 systemctl enable create_vrf.service
 ```
 
-- 【参考】起動と停止方法
+- 【参考】サービスの起動と停止方法
 
 ```bash
 systemctl start ユニットファイル名
 systemctl stop ユニットファイル名
+systemctl reload ユニットファイル名
 ```
-
-### 【参考】ipコマンド
 
 - 【参考】VRFの情報を表示する方法
 
@@ -998,6 +997,9 @@ seg6 2001:db8:0:4:1::はSRv6のSIDです。
 
 ## PE3から送信されるパケット
 
+SRv6の網内はIPv6のリンクローカルアドレスしか割り当てていませんが、
+この状態でもCE5とCE6の間でIPv4の通信が成立します。
+
 
 ![ICMP](img/ping_from_ce5_to_ce6.png)
 
@@ -1009,4 +1011,7 @@ seg6 2001:db8:0:4:1::はSRv6のSIDです。
 >
 > img/ping_from_ce5_to_ce6.pcapng
 >
->
+
+IOS-XRの場合、L3VPNの通信にSRv6のヘッダはつかないのですが、Linuxの実装ではついているのがわかります。
+
+相互接続の観点で難があるかもしれません。
