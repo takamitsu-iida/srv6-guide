@@ -2,6 +2,10 @@
 
 LinuxだけでL3VPNを構成します。
 
+> 参考
+>
+> https://segment-routing.org/
+
 
 ## 構成
 
