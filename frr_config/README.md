@@ -1007,11 +1007,9 @@ SRv6の網内はIPv6のリンクローカルアドレスしか割り当ててい
 
 送信先アドレス（2001:db8:0:4:1::）はPE4のEnd.DT4のSIDです。
 
-> pcapngファイル
->
-> img/ping_from_ce5_to_ce6.pcapng
->
-
 IOS-XRの場合、L3VPNの通信にSRv6のヘッダはつかないのですが、Linuxの実装ではついているのがわかります。
 
 相互接続の観点で難があるかもしれません。
+
+
+【参考】[pcapngファイル](img/ping_from_ce5_to_ce6.pcapng)
