@@ -15,9 +15,9 @@ BGPを使わずにスタティックにSIDテーブルを作ります。
 
 ISISでループバックアドレス同士の通信が成立するようにしておきます。
 
-また、ロケータとして採番した/64プレフィクスをISISで配るためにスタティックルートを設定し、それをredistributeします。
+ロケータとして採番した/64プレフィクスをISISで配るためにスタティックルートを設定し、それをredistributeします。
 
-PE3の場合はこのような設定になります。
+たとえばPE3の場合はこのような設定になります。
 
 ```
 !
@@ -30,6 +30,208 @@ router isis core
  topology ipv6-unicast
 exit
 ```
+
+
+- CR1の設定
+
+```
+cr1# sh run
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5
+frr defaults traditional
+hostname cr1
+log syslog informational
+service integrated-vtysh-config
+!
+ipv6 route 2001:db8:0:1::/64 Null0
+!
+interface e1
+ description to_PE3_e1
+ ipv6 router isis core
+ isis metric 1
+ isis network point-to-point
+exit
+!
+interface e2
+ description to_PE4_e1
+ ipv6 router isis core
+ isis metric 1
+ isis network point-to-point
+exit
+!
+interface e3
+ description to_CR2_e1
+ ipv6 router isis core
+ isis metric 1
+ isis network point-to-point
+exit
+!
+interface lo
+ ipv6 address 2001:db8:0:1::1/128
+ ipv6 router isis core
+exit
+!
+router isis core
+ net 49.0000.0000.0000.0001.00
+ redistribute ipv6 static level-2
+ topology ipv6-unicast
+exit
+!
+end
+```
+
+- CR2の設定
+
+```
+cr2# sh run
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5
+frr defaults traditional
+hostname cr2
+log syslog informational
+service integrated-vtysh-config
+!
+ipv6 route 2001:db8:0:2::/64 Null0
+!
+interface e1
+ description to_CR1_e3
+ ipv6 router isis core
+ isis metric 2
+ isis network point-to-point
+exit
+!
+interface e2
+ description to_PE3_e2
+ ipv6 router isis core
+ isis metric 2
+ isis network point-to-point
+exit
+!
+interface e3
+ description to_PE4_e2
+ ipv6 router isis core
+ isis metric 2
+ isis network point-to-point
+exit
+!
+interface lo
+ ipv6 address 2001:db8:0:2::1/128
+ ipv6 router isis core
+exit
+!
+router isis core
+ net 49.0000.0000.0000.0002.00
+ redistribute ipv6 static level-2
+ topology ipv6-unicast
+exit
+!
+end
+```
+
+- PE3の設定
+
+```
+pe3# sh run
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5
+frr defaults traditional
+hostname pe3
+log syslog informational
+service integrated-vtysh-config
+!
+ipv6 route 2001:db8:0:3::/64 Null0
+!
+interface e1
+ description to_CR1_e1
+ ipv6 router isis core
+ isis metric 1
+ isis network point-to-point
+exit
+!
+interface e2
+ description to_CR2_e2
+ ipv6 router isis core
+ isis metric 2
+ isis network point-to-point
+exit
+!
+interface lo
+ ipv6 address 2001:db8:0:3::1/128
+ ipv6 router isis core
+exit
+!
+interface e3
+ description vrfA
+ ip address 192.168.3.1/24
+exit
+!
+router isis core
+ net 49.0000.0000.0000.0003.00
+ redistribute ipv6 static level-2
+ topology ipv6-unicast
+exit
+!
+end
+```
+
+- PE4の設定
+
+```
+pe4# sh run
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5
+frr defaults traditional
+hostname pe4
+log syslog informational
+service integrated-vtysh-config
+!
+ipv6 route 2001:db8:0:4::/64 Null0
+!
+interface e1
+ description to_CR1_e2
+ ipv6 router isis core
+ isis metric 1
+ isis network point-to-point
+exit
+!
+interface e2
+ description to_CR2_e3
+ ipv6 router isis core
+ isis metric 2
+ isis network point-to-point
+exit
+!
+interface lo
+ ipv6 address 2001:db8:0:4::1/128
+ ipv6 router isis core
+exit
+!
+interface e3
+ description vrfA
+ ip address 192.168.4.1/24
+exit
+!
+router isis core
+ net 49.0000.0000.0000.0004.00
+ redistribute ipv6 static level-2
+ topology ipv6-unicast
+exit
+!
+end
+```
+
 
 ## SID用のテーブルを作成
 
