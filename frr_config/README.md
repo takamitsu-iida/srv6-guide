@@ -6,8 +6,6 @@ LinuxだけでL3VPNを構成します。
 
 [SRv6 STATIC](README.static.md) L3VPN over SRv6構成の設定例です。BGPを使わずにスタティックにSIDを設定します。
 
-[iproute2](README.iproute2.md) iproute2を使ったSRv6設定についてのメモです。
-
 <br><br>
 
 ## 留意事項
