@@ -9,15 +9,14 @@
 
 メモです。
 
-### インタフェースごとの設定
+### インタフェース単位でのSRv6の有効化設定
 
 ```
 net.ipv6.conf.*.seg6_enabled (integer)
 ```
 
-0はSRパケットを破棄
-
-1はSRパケットを受信して処理
+- 0 はSRパケットを破棄
+- 1 はSRパケットを受信して処理
 
 
 ### カプセル化
@@ -47,17 +46,13 @@ ip sr tunsrc set <addr>
 
 ```
 # echo 100 localsid >> /etc/iproute2/rt_tables
-# ip -6 rule add to fc00::/64 lookup localsid
-# ip -6 route add blackhole default table localsid
 ```
 
 table 100をlocalsidとして作成。
 
-fc00::/64は作成したlocalsidを参照。
-
-その他の知らない宛先は破棄。
-
 /etc/iproute2/rt_tablesには以下の通り、既定で設定されている。
+
+通常のルーティングテーブルは254 mainを利用する。
 
 ```
 root@pe3:~# cat /etc/iproute2/rt_tables
@@ -73,6 +68,20 @@ root@pe3:~# cat /etc/iproute2/rt_tables
 #
 #1      inr.ruhep
 ```
+
+```
+# ip -6 rule add to fc00::/64 lookup localsid
+```
+
+ルールを追加して宛先 fc00::/64 については localsid テーブルを参照するように設定。
+
+```
+# ip -6 route add blackhole default table localsid
+```
+
+SID以外の知らない宛先は破棄するエントリをlocalsidテーブルに加える。
+
+
 
 ### SIDとファンクションの対応付け
 
