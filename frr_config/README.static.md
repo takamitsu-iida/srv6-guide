@@ -442,7 +442,7 @@ ip -4 route add 192.168.4.0/24 encap seg6 mode encap segs 2001:db8:0:1:ee01::,20
 - 2001:db8:0:1:ee01:: はCR1のSIDで、ファンクションee01はEnd動作であることを期待しています
 - 2001:db8:0:2:ee01:: はCR2のSIDで、ファンクションee01はEnd動作であることを期待しています
 - 2001:db8:0:1:ee01:: はCR1のSIDで、ファンクションee01はEnd動作であることを期待しています
-- 2001:db8:0:4:ff01:: はPE4のSIDで、ファンクションff01はEnd.DT4動作であることを期待しています（定義済み）
+- 2001:db8:0:4:ff01:: はPE4のSIDで、ファンクションff01はEnd.DT4動作であることを期待しています
 
 PE3のVRF（名前vrfA、テーブル番号110）のルーティングテーブルを確認します。
 
@@ -451,7 +451,7 @@ PE3のVRF（名前vrfA、テーブル番号110）のルーティングテーブ�
 ```
 root@pe3:~# ip route show vrf vrfA
 192.168.3.0/24 dev e3 proto kernel scope link src 192.168.3.1
-192.168.4.0/24  encap seg6 mode encap segs 3 [ 2001:db8:0:1:ee01:: 2001:db8:0:2:ee01:: 2001:db8:0:4:ff01:: ] dev e1 scope link
+192.168.4.0/24  encap seg6 mode encap segs 4 [ 2001:db8:0:1:ee01:: 2001:db8:0:2:ee01:: 2001:db8:0:1:ee01:: 2001:db8:0:4:ff01:: ] dev e1 scope link
 ```
 
 ## END SIDの作成
