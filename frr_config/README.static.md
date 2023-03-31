@@ -425,7 +425,7 @@ CE5#
 
 PE3でSRv6にカプセル化するときに、途中経由地のSIDを複数定義することで、グネグネした通信を実現します。
 
-![グネグネ構成](img/static_snake.drawio.png)
+![グネグネ構成](img/static.snake.drawio.png)
 
 PE3のVRF（名前vrfA、テーブル番号110）に定義したスタティックルートを消します。
 
