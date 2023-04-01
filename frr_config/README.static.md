@@ -499,7 +499,7 @@ Segments Leftが3になっていますので、Address[3]を指しています�
 
 CR1からPE4に送信される最後のSRv6パケットはこのようになっています。
 
-![ICMP最後](img/snake_first.png)
+![ICMP最後](img/snake_last.png)
 
 【参考】[pcapngファイル](img/snake_last.pcapng)
 
