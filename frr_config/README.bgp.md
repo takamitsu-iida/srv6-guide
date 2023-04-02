@@ -224,6 +224,8 @@ net.ipv6.conf.all.keep_addr_on_down=1
 
 # SRv6
 net.ipv6.conf.all.seg6_enabled=1
+net.ipv6.conf.all.seg6_require_hmac=0
+net.ipv6.conf.default.seg6_enabled=1
 net.ipv6.seg6_flowlabel=1
 
 # VRF
