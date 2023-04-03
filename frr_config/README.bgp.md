@@ -218,12 +218,11 @@ Ubuntuをルータとして動けるようにするほか、VRFとSRv6のパラ�
 `vi /etc/sysctl.d/99-sysctl.conf`
 
 ```ini
-# Uncomment the next line to enable packet forwarding for IPv4
+
+# IPv4 packet forwarding
 net.ipv4.ip_forward=1
 
-# Uncomment the next line to enable packet forwarding for IPv6
-#  Enabling this option disables Stateless Address Autoconfiguration
-#  based on Router Advertisements for this host
+# IPv6 packet forwarding
 net.ipv6.conf.all.forward=1
 
 # Reverse Path Filter
