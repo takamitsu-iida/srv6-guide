@@ -128,11 +128,22 @@ Acquire::https::proxy "http://username:password@proxy-address:8080";
 
 ### Ubuntuのアップデート
 
-Ubuntu自体をアップデートします。長い時間かかります。
+Ubuntu自体をアップデートします。
 
 ```bash
 apt update
 apt upgrade
+```
+upgradeは長い時間かかります。
+
+途中で既存の/etc/ssh/ssd_configを残すか、問われます。既存を残しておきます（デフォルト）。
+
+どのサービスをリスタートするか、聞かれますので、全部デフォルトで進みます。
+
+使わなくなった古いパッケージを削除します。
+
+```
+apt autoremove
 ```
 
 シリアルコンソールでviを使うとその後、画面が乱れますのでresizeコマンドを使うためにxtermをインストールします。
@@ -234,7 +245,6 @@ net.ipv4.udp_l3mdev_accept=1
 net.ipv4.raw_l3mdev_accept=1
 ```
 
-
 ## FRRのインストール
 
 動的ルーティングのデーモンとしてFRRを利用します。
@@ -309,6 +319,8 @@ pathd=no
 
 
 ## VRFの作成
+
+PEルータ（PE3, PE4）でVRFを作成します。
 
 FRRではVRFを操作できませんので、Ubuntu側で事前に作成します。
 
