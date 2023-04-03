@@ -12,11 +12,14 @@ SRv6の先進的な機能はsrextに実装されています。カーネルモ�
 >
 > https://github.com/netgroup/SRv6-net-prog
 
+> 参考
+>
+> https://www.slideshare.net/amsalam20/service-function-chaining-with-srv6
+
 
 ## 構成
 
 ![構成](img/srext.drawio.png)
-
 
 CR1にサービスモードS1を接続します。
 S1はSRv6を実装していませんので、SIDを持っていません。

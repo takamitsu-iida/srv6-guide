@@ -278,6 +278,24 @@ echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) $FRRVER | sudo tee -
 sudo apt update && sudo apt install frr frr-pythontools
 ```
 
+> 参考
+>
+> apt-keyは廃止されているので、apt updateに失敗するようになるかもしれません。
+> その場合はここを参照。
+>
+> https://itsfoss.com/key-is-stored-in-legacy-trusted-gpg/
+>
+> sudo apt-key export 08F13ED1 | gpg --dearmour -o /etc/apt/trusted.gpg.d/frr.gpg
+
+> 参考
+> FRRのリポジトリを追加したことでapt updateにエラーがでるかもしれません。
+> その場合は次のようにキャッシュを削除することで対処できるかもしれません。
+>
+> dpkg --clear-avail
+>
+> rm /var/lib/apt/lists/* --force
+
+
 BGPとISISを有効にします。
 
 `vi /etc/frr/daemons`
