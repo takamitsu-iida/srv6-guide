@@ -57,14 +57,13 @@ passwd root
 dpkg-reconfigure keyboard-configuration
 ```
 
-表示される選択肢に従って`Japanese`を選びます。
+表示される選択肢に従って`Generic(105)` → `Japanese`を選びます。
 
 
 ### シリアルコンソールの有効化
 
-Ubuntu ServerなのでGUIは不要なのですが、そのままだとVNCクライアントが起動してしまいます。
-
-シリアルコンソールを動かしてtelnet接続するように変更します。
+Ubuntu ServerなのでGUIは不要にもかかわらず、そのままだとVNCクライアントが起動してしまいます。
+テキストのコピー＆ペーストができずに不便ですので、シリアルコンソールを動かしてtelnet接続するように変更します。
 
 `vi /etc/default/grub`
 
@@ -129,10 +128,11 @@ Acquire::https::proxy "http://username:password@proxy-address:8080";
 
 ### Ubuntuのアップデート
 
-Ubuntu自体をアップデートします。
+Ubuntu自体をアップデートします。長い時間かかります。
 
 ```bash
 apt update
+apt upgrade
 ```
 
 シリアルコンソールでviを使うとその後、画面が乱れますのでresizeコマンドを使うためにxtermをインストールします。
