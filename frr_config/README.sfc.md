@@ -194,7 +194,7 @@ PE3からみてPE4の先にいるVRF経路（192.168.4.0/24）をスタティッ
 ip -4 route add 192.168.4.0/24 encap seg6 mode encap segs 2001:db8:0:4:a:: dev e1 table 110
 ```
 
-- SID 2001:db8:0:4:a:: はPE4におけるEnd.DT4であることを期待しています
+- SID `2001:db8:0:4:a::` はPE4におけるEnd.DT4であることを期待しています
 
 ## PE4のVRFのスタティックルート設定
 
@@ -205,7 +205,7 @@ PE4からみてPE3の先にいるVRF経路（192.168.3.0/24）をスタティッ
 ip -4 route add 192.168.3.0/24 encap seg6 mode encap segs 2001:db8:0:3:a:: dev e1 table 110
 ```
 
-- SID 2001:db8:0:3:a:: はPE3におけるEnd.DT4であることを期待しています
+- SID `2001:db8:0:3:a::` はPE3におけるEnd.DT4であることを期待しています
 
 
 ## PE3のEnd.DT4の設定
@@ -383,9 +383,7 @@ ip netns exec vnf2 ip -6 route add default via fe80::1 dev veth0-vnf2
 # add End SID in namespace
 ip netns exec vnf1 ip -6 route add 2001:db8:0:2:21::/128 encap seg6local action End dev veth0-vnf1
 ip netns exec vnf2 ip -6 route add 2001:db8:0:2:22::/128 encap seg6local action End dev veth0-vnf2
-
 ```
-
 
 PE3からS2のnamespace上にあるアドレスに疎通確認します。
 
