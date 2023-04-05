@@ -517,11 +517,11 @@ CRのS2向けインタフェースでキャプチャしたものがこちら。
 
 - CRからS2向けのパケット
 
-![CRからS2向け](img/sfc_vnf1_vnf2_1.drawio.PNG)
+![CRからS2向け](img/sfc_vnf1_vnf2_1.PNG)
 
 - S2からCRに戻ってくるパケット
 
-![S2からCR向け](img/sfc_vnf1_vnf2_2.drawio.PNG)
+![S2からCR向け](img/sfc_vnf1_vnf2_2.PNG)
 
 【参考】[pcapngファイル](img/sfc_vnf1_vnf2.pcapng)
 
