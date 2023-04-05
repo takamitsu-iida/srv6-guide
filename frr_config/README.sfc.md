@@ -290,7 +290,7 @@ Sending 5, 100-byte ICMP Echos to 192.168.4.6, timeout is 2 seconds:
 Success rate is 100 percent (5/5), round-trip min/avg/max = 2/2/3 ms
 ```
 
-## サービスモードのセットアップ
+## サービスノードのセットアップ
 
 S2のホスト設定です。
 
