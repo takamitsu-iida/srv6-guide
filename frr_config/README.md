@@ -8,7 +8,7 @@ LinuxだけでL3VPNを構成します。
 
 [srext](README.srext.md) カーネルモジュールsrextを使ってproxy動作を試しましたが、動作しなかった例です。参考までに記録を残します。
 
-[SRv6 SFC](README.srext.md) LinuxでSFC(Service Function Chaining)を構成する設定例です。
+[SRv6 SFC](README.sfc.md) LinuxでSFC(Service Function Chaining)を構成する設定例です。
 
 <br><br>
 
