@@ -29,3 +29,52 @@ SRv6の応用範囲は広いにもかかわらず一般的な企業ネットワ�
 <br><br>
 
 # [Linux FRR設定例](frr_config/README.md)
+
+
+
+<!--
+GoBMP
+
+https://github.com/sbezverk/gobmp
+
+
+apt -y install golang-go
+apt -y install make
+
+git clone https://github.com/sbezverk/gobmp
+cd   gobmp
+make gobmp
+
+bin/gobmp --source-port=5050 --destination-port=5050 --dump=console --intercept=false
+
+IOS-XEの場合
+!
+router bgp 65002
+ bmp server 1
+  address 10.1.0.100 port-number 5050
+  initial-delay 30
+  activate
+ exit-bmp-server-mode
+ !
+!
+
+IOS-XRの場合
+!
+router bgp 65001
+ !
+  neighbor 2001:db8::3
+   remote-as 65001
+   bmp-activate server 1
+  neighbor 2001:db8::4
+   remote-as 65001
+   bmp-activate server 1
+ !
+
+!
+bmp server 1
+ host 2001:db8:0:100::2 port 5050
+ initial-delay 30
+!
+
+
+-->

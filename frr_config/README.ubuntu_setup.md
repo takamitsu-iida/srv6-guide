@@ -2,13 +2,76 @@
 
 一部のコマンドはインタラクティブなので注意が必要。
 
-## キーボードの設定
+### Ubuntuイメージ起動時のQEMU設定
 
-インタラクティブな操作です。メニューにしたがってJapaneseを選択します。
+QEMUのオプションに `-k ja` を追加してから起動するようにします。
 
+日本語キーボードを使う、という指定です。
+
+![構成](img/frr-qemu.png)
+
+この設定は結線したりラボに変更を加えると消えてしまうことがあるので、その都度、追加します。
+
+
+### Ubuntuのrootパスワード変更
+
+出来合いのイメージのrootのパスワードはTest123になっていますので、これを変更します。
+
+VNCクライアントで接続し、rootでログインします。
+
+```bash
+passwd root
 ```
+
+### キーボードの設定を変更
+
+そのままだとviで編集作業をするときにコロンが打てなくて難儀しますので、日本語キーボードに変更します。
+
+```bash
 dpkg-reconfigure keyboard-configuration
 ```
+
+表示される選択肢に従って`Generic(105)` → `Japanese`を選びます。
+
+再起動します。
+
+```bash
+reboot
+```
+
+### シリアルコンソールの有効化
+
+Ubuntu ServerなのでGUIは不要にもかかわらず、そのままだとVNCクライアントが起動してしまいます。
+テキストのコピー＆ペーストができずに不便ですので、シリアルコンソールを動かしてtelnet接続するように変更します。
+
+`vi /etc/default/grub`
+
+GRUB_CMD_LINE_LINUX=""となっている部分を以下のように変更します。
+
+```
+GRUB_CMDLINE_LINUX="console=ttyS0,115200 console=tty0"
+```
+
+編集したら反映させます。
+
+```bash
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+Ubuntuを停止します。
+
+```bash
+shutdown –h now
+```
+
+ここまでがVNCクライアントを使っての作業です。
+
+EVE-NGの設定でコンソール接続をtelnetに変更します。
+
+Ubuntuを起動します。
+
+ここからさきはルータと同じくtelnetのターミナルアプリで操作します。
+
 
 ## ホスト名、プロキシ設定
 
@@ -44,9 +107,29 @@ EOS
 apt -y update
 ```
 
+## 最低限必要なパッケージをインストール
+
+ターミナルのサイズが反映されていない状態でシリアルコンソールを使い続けると画面が乱れて難儀します。
+resizeコマンドをインストールするためにxtermをインストールします。
+
+```
+apt -y install xterm
+```
+
+ログインと同時に自動実行されるように設定しておきます。
+
+```
+eval `resize`
+
+echo 'eval `resize`' >> ~/.bashrc
+```
+
+
 ## アップグレード
 
-インタラクティブな操作が必要です。
+長い時間かかりますが、インタラクティブな操作が必要なので、定期的にターミナルをチェックしなければいけません。
+
+途中で表示されるメニューはデフォルトのままリターンキーを叩けばよいでしょう。
 
 ```
 apt -y upgrade
@@ -58,15 +141,9 @@ apt -y upgrade
 apt -y autoremove
 ```
 
-追加で必要なものをインストールする
-
-```
-apt -y install xterm
-```
-
 ## フロッピーデバイスの削除
 
-フロッピーデバイスが組み込まれているとsystemctlで失敗するので削除する。
+フロッピーデバイスが組み込まれているとsystemctlで失敗するので削除します。
 
 ```
 sudo rmmod floppy
@@ -76,7 +153,12 @@ sudo dpkg-reconfigure initramfs-tools
 
 ## ネットワーク設定
 
+`ip link`でイーサネットが何個あるか確認します。
+
+以下は4個のイーサネットを持っている前提です。
+
 ```
+ip link set ens3 up
 ip link set ens4 up
 ip link set ens5 up
 ip link set ens6 up
@@ -155,7 +237,9 @@ EOS
 
 ## FRRのインストール
 
-動的ルーティングを必要とするノードのみ。
+動的ルーティングを必要とするノードのみ、FRRをインストールします。
+
+以下ではBGPとISISを有効にしています。
 
 ```
 # add GPG key
@@ -171,14 +255,32 @@ apt update && apt -y install frr frr-pythontools
 
 sed -i "s/bgpd=no/bgpd=yes/" /etc/frr/daemons
 sed -i "s/isisd=no/isisd=yes/" /etc/frr/daemons
-
+# sed -i "s/ospfd=no/ospfd=yes/" /etc/frr/daemons
+# sed -i "s/ospf6d=no/ospf6d=yes/" /etc/frr/daemons
 ```
+
+> 参考
+>
+> apt-keyは廃止されているので、apt updateに失敗するようになるかもしれません。
+> その場合はここを参照。
+>
+> https://itsfoss.com/key-is-stored-in-legacy-trusted-gpg/
+>
+> sudo apt-key export 08F13ED1 | gpg --dearmour -o /etc/apt/trusted.gpg.d/frr.gpg
+
+> 参考
+> FRRのリポジトリを追加したことでapt updateにエラーがでるかもしれません。
+> その場合は次のようにキャッシュを削除することで対処できるかもしれません。
+>
+> dpkg --clear-avail
+>
+> rm /var/lib/apt/lists/* --force
 
 # VRF作成
 
-VRFの作成を必要とするノードのみ。
+VRFの作成を必要とするノードのみ、以下を流し込みます。
 
-IPアドレスの設定はFRRで実施する。
+IPアドレスの設定はFRRで実施します。
 
 ```
 mkdir -p /nic
@@ -238,13 +340,13 @@ systemctl enable create_vrf.service
 
 ## SRv6 SID用のルーティングテーブル
 
-テーブル番号100、名前localsidで作成。
+テーブル番号100、名前localsidで作成します。
 
 ```bash
 echo 100 localsid >> /etc/iproute2/rt_tables
 ```
 
-参照するルールを追加。
+参照するルールを追加します。
 
 ```
 cat - << EOS > /nic/bin/create_localsid.sh
@@ -269,7 +371,7 @@ chmod 755 /nic/bin/create_localsid.sh
 /nic/bin/create_localsid.sh
 ```
 
-自動起動スクリプトを作成。
+自動起動スクリプトを作成します。
 
 ```
 cat - << EOS > /etc/systemd/system/create_localsid.service

@@ -59,6 +59,11 @@ dpkg-reconfigure keyboard-configuration
 
 表示される選択肢に従って`Generic(105)` → `Japanese`を選びます。
 
+再起動します。
+
+```bash
+reboot
+```
 
 ### シリアルコンソールの有効化
 
@@ -154,6 +159,11 @@ apt install xterm
 
 `resize -c` コマンドで画面がキレイになります。
 
+ログイン時に自動実行されるように設定しておきます。
+
+```
+echo "eval `resize`" >> ~/.bashrc
+```
 
 ### Ubuntuのイーサネットインタフェース設定
 
@@ -293,7 +303,6 @@ sudo apt update && sudo apt install frr frr-pythontools
 > dpkg --clear-avail
 >
 > rm /var/lib/apt/lists/* --force
-
 
 BGPとISISを有効にします。
 
