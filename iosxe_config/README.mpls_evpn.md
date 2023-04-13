@@ -103,19 +103,17 @@ interface Loopback0
 !
 !
 interface GigabitEthernet1
- mtu 9216
+ mtu 9000
  ip address 192.168.111.11 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 10
- cdp enable
 !
 !
 interface GigabitEthernet2
- mtu 9216
+ mtu 9000
  ip address 192.168.211.11 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 20
-　cdp enable
 !
 router ospf 1
  router-id 192.168.255.11
@@ -135,28 +133,28 @@ interface Loopback0
  ip address 192.168.255.1 255.255.255.255
 !
 interface GigabitEthernet1
- mtu 9216
+ mtu 9000
  ip address 192.168.111.1 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 1
  cdp enable
 !
 interface GigabitEthernet2
- mtu 9216
+ mtu 9000
  ip address 192.168.112.1 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 2
  cdp enable
 !
 interface GigabitEthernet3
- mtu 9216
+ mtu 9000
  ip address 192.168.113.1 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 3
  cdp enable
 !
 interface GigabitEthernet4
- mtu 9216
+ mtu 9000
  ip address 192.168.114.1 255.255.255.0
  ip ospf network point-to-point
  ip ospf cost 4
@@ -213,7 +211,7 @@ segment-routing mpls
 
 ### 続いて装置を代表するSIDである、ノードSIDを各装置に定義します。
 
-ノードSIDは動的ルーティングで自動採番されますが、ここでは装置を代表するノードSIDを固定で設定します。
+ここでは装置を代表するノードSIDを固定で設定します。
 
 各装置、次のように採番します。
 
@@ -348,9 +346,13 @@ segment-routing mpls
 !
 ```
 
+<br><br>
+
 ## ここまでの設定で状態を確認します。
 
-- OSPFを動かしました
+ここまでの設定で以下の設定を投入しました。
+
+- OSPFを有効にしました
 - SR-MPLSを有効にしました
 - ノードSIDを固定的に設定しました
 - OSPFをSR-MPLS対応に設定しました
@@ -417,7 +419,7 @@ Adj-Sid  Neighbor ID     Interface          Neighbor Addr   Flags   Backup Nexth
 20       192.168.255.2   Gi2                192.168.211.2   D U
 ```
 
-これはインデックスではありません。
+Adj-Sidの数字はインデックスではありません。MPLSで用いられるラベル値そのものです。
 
 <br>
 
@@ -446,16 +448,431 @@ A  - Adjacency SID
 
 隣接関係SIDとノードSIDしか見えていません。
 
-PE11からPE13の物理インタフェース 192.168.113.13 にpingしてみます。
+PE11からPE13の **物理インタフェース** 192.168.113.13 にpingしてみます。
 
 ![PE11からPE13のGig1にping](img/ping_from_pe11_to_pe13_gig1.PNG)
 
 MPLSになっていません。IPv4パケットです。
 
-PE11からPE13のループバック 192.168.255.13 にpingしてみます。
+PE11からPE13の **ループバック** 192.168.255.13 にpingしてみます。
 
 ![PE11からPE13のLo0にping](img/ping_from_pe11_to_pe13_lo0.PNG)
 
 こんどはICMP Echo Requestにラベル20013がついていることが分かります。
 
 このようにSR-MPLSではドメイン内の全通信がMPLSになるわけではなく、SRGBの範囲内で割り当てられたノードSIDだけがMPLSになっていることがわかります。
+
+<br><br>
+
+## EVPNを設定します
+
+順番に設定していきます。
+
+![設計パラメータ](img/evpn.parameters.drawio.png)
+
+<br>
+
+### EVPNを有効にします
+
+l2vpn evpnセクションでEVPNに共通の動作を指定します。
+
+```
+l2vpn evpn
+ replication-type ingress
+ mpls label mode per-ce
+ router-id Loopback0
+!
+```
+
+replication-typeの指定は必須です。
+
+![replication-type ingress](img/replication.drawio.png)
+
+PEルータは学習していないMACアドレスを受信したら自分以外の全てのPEにそれを届けなければいけません。
+`replication-type`はそのやり方を定義するもので、
+ingressは受信したノードでパケットのコピーを作成して全PEにユニキャストで転送する方式です。
+マルチキャストで配信できればよいのですが、MPLS網ではそういうわけにいきませんので、事実上ingressの一択です。
+
+<br>
+
+### EVIとBDを定義します
+
+EVIとBDは以下の関係にあります。
+
+![eviとbdの関係](img/evi_bd.drawio.png)
+
+EVIはEVPNを識別する識別子で、L3VPNにおけるVRFに相当するものです。
+どのPEにある、どのEVIでイーサネットを形成するか、を設計するものなので、ネットワーク全域を見渡して設計するパラメータです。
+
+ここではPE11, PE12, PE13, PE14で共通のEVIを定義します。
+
+```
+l2vpn evpn instance 100 vlan-based
+ rd 65000:100
+ route-target export 65000:100
+ route-target import 65000:100
+!
+```
+
+instance 100の100は装置内でユニークであれば何番でも構いません。
+重要なのはRDの方です。
+全てのPEでRD=65000:100としたEVIを作成します。
+
+この装置で学習したMACテーブルを65000:100として他のPEに広告します（export）。
+
+他のPEが65000:100として広告してきたMACテーブルをこのEVIに取り込みます（import）。
+
+
+```
+!
+bridge-domain 100
+ member evpn-instance 100
+!
+```
+
+bridge-domain 100の100は装置内でユニークであれば何番でも構いません。
+
+ブリッジドメインからみると、ダウンリンク側として自装置のどのポートがブリッジに参加するか、そしてアップリンク側としてどのEVIがそのブリッジに参加するか、を指定することになります。
+ここではまずアップリンク側のEVIをメンバーとして指定しています。
+
+<br>
+
+### ESIの設定
+
+ESIはEVPNに参加するイーサネットを識別するものです。
+
+シングル構成であれば明示的に設定する必要はなく、自動採番で構いません。
+
+マルチホーム接続の場合にはESIを適切に設定することで異なるPE装置間で同一のLANを形成することができます。
+
+![ESI](img/esi.drawio.png)
+
+
+### CE向け物理ポートの設定
+
+
+> 注意
+>
+> ESI-LAGを組むときには、対向装置はLACPをサポートしたものでなければいけません。ここではNexus9000vを利用しています。
+
+PE11とPE12はポートチャネルを作成して、その中に流れるVLANをブリッジドメインに参加させます。
+
+PE13とPE14は物理ポートをブリッジドメインに参加させます。
+
+PE11の設定
+
+```
+!
+interface Port-channel1
+ no ip address
+ no negotiation auto
+ evpn ethernet-segment 100
+  identifier type 0 00.00.00.00.00.00.00.00.11
+  redundancy all-active
+  df-election wait-time 1
+ lacp device-id 0000.0000.0011
+ service instance 100 ethernet
+  encapsulation untagged
+ !
+!
+interface GigabitEthernet3
+ no ip address
+ negotiation auto
+ channel-group 1
+!
+
+!
+bridge-domain 100
+ member Port-channel1 service-instance 100
+ member evpn-instance 100
+!
+```
+
+PE12の設定はPE11と同じです。
+
+```
+!
+interface Port-channel1
+ no ip address
+ no negotiation auto
+ evpn ethernet-segment 100
+  identifier type 0 00.00.00.00.00.00.00.00.11
+  redundancy all-active
+  df-election wait-time 1
+ lacp device-id 0000.0000.0011
+ service instance 100 ethernet
+  encapsulation untagged
+ !
+!
+interface GigabitEthernet3
+ no ip address
+ negotiation auto
+ no mop enabled
+ no mop sysid
+ channel-group 1 mode active
+
+!
+bridge-domain 100
+ member Port-channel1 service-instance 100
+ member evpn-instance 100
+!
+```
+
+Port-channel直下のこの設定がESIを定義したものです。
+
+```
+ evpn ethernet-segment 100
+  identifier type 0 00.00.00.00.00.00.00.00.11
+```
+
+100という数字は特に意味を持っていないと思います（Port-channel直下には一つしか定義できません）。
+ESIをtype 0で指定する場合は9バイトの文字列です。
+ここではPE11とPE12共に下1オクテットを11としています。
+
+PE13とPE14の設定はこうなります。
+
+```
+!
+interface GigabitEthernet3
+ no ip address
+ negotiation auto
+ service instance 100 ethernet
+  encapsulation untagged
+ !
+!
+bridge-domain 100
+ member GigabitEthernet3 service-instance 100
+ member evpn-instance 100
+!
+```
+
+bridge-domainの設定で、ダウンリンク側はGig3の中のservice-instance 100を、アップリンク側はevi 100を指定しています。
+
+ここでは設定していませんが、VLANタグを付けたり、VLAN番号を変換することもできます。
+
+<br>
+
+### BGPの設定
+
+PE同士でiBGP接続し、MAC学習テーブルの情報を交換します。
+
+フルメッシュでの設定を回避するために、CR1とCR2をルートリフレクタとします。
+
+PE11, PE12, PE13, PE14共通設定(PE_NUMBERのところに11, 12, 13, 14を代入)
+
+```
+!
+router bgp 65000
+ bgp router-id 192.168.255.{{ PE_NUMBER }}
+ bgp log-neighbor-changes
+ bgp graceful-restart
+ no bgp default ipv4-unicast
+ neighbor 192.168.255.1 remote-as 65000
+ neighbor 192.168.255.1 update-source Loopback0
+ neighbor 192.168.255.2 remote-as 65000
+ neighbor 192.168.255.2 update-source Loopback0
+ !
+ address-family l2vpn evpn
+  neighbor 192.168.255.1 activate
+  neighbor 192.168.255.1 send-community both
+  neighbor 192.168.255.1 next-hop-self
+  neighbor 192.168.255.1 soft-reconfiguration inbound
+  neighbor 192.168.255.2 activate
+  neighbor 192.168.255.2 send-community both
+  neighbor 192.168.255.2 next-hop-self
+  neighbor 192.168.255.2 soft-reconfiguration inbound
+ exit-address-family
+ !
+!
+```
+
+<br><br>
+
+## ここまでの設定で状態を確認します。
+
+ここまでの設定で以下の設定を投入しました。
+
+- EVPNを有効にしました
+- EVIをRD=65000:100として定義しました
+- PE11とPE12はPort-channelを作成しました
+- PE11とPE12はESIを明示的に設定しました
+- ブリッジドメインを定義しました（アップリンクがEVI、ダウンリンクがservice-instance）
+- BGPにaddress-family l2vpn evpnを定義しました
+
+
+<br>
+
+### EVPNのピアを確認します
+
+`show l2vpn evpn peers`
+
+PE11での実行例です。
+
+```
+PE11#sh l2vpn evpn peers
+
+EVI    BD    Peer-IP                   Num routes UP time
+------ ----- ------------------------  ---------- --------
+Global N/A   192.168.255.12            2          02:42:51
+100    100   192.168.255.12            2          02:42:49
+100    100   192.168.255.13            2          03:34:25
+100    100   192.168.255.14            2          03:34:25
+```
+
+PE11とPE12はESI-LAGを構成しています。その関係で192.168.255.12が2台見えています。
+
+<br>
+
+### EVIを確認します
+
+`show l2vpn evpn evi`
+
+PE11での実行例です。
+
+```
+PE11#show l2vpn evpn evi
+EVI   BD    Ether Tag  BUM Label Unicast Label Pseudoport
+----- ----- ---------- --------- ------------- ------------------
+100   100   0          17        21            Po1:100
+```
+
+EVIインスタンス100に関して、BUM(Broadcast Unknown-unicast Multicast)パケットはラベルは17で受信することを期待、ユニキャスト通信はラベル21で受信していることを期待しています。
+
+<br>
+
+### MACアドレステーブルを確認します
+
+`show l2vpn evpn mac`
+
+PE11での実行例です。
+
+CE装置が4台います。全て学習しています。
+
+```
+PE11#show l2vpn evpn mac
+MAC Address    EVI   BD    ESI                      Ether Tag  Next Hop(s)
+-------------- ----- ----- ------------------------ ---------- ---------------
+aabb.cc00.0700 100   100   0000.0000.0000.0000.0011 0          192.168.255.12
+aabb.cc00.0800 100   100   0000.0000.0000.0000.0011 0          Po1:100
+aabb.cc00.0900 100   100   0000.0000.0000.0000.0000 0          192.168.255.13
+aabb.cc00.0a00 100   100   0000.0000.0000.0000.0000 0          192.168.255.14
+```
+
+PE12で実行するとこのようになります。
+
+```
+PE12#show l2vpn evpn mac
+MAC Address    EVI   BD    ESI                      Ether Tag  Next Hop(s)
+-------------- ----- ----- ------------------------ ---------- ---------------
+aabb.cc00.0700 100   100   0000.0000.0000.0000.0011 0          Po1:100
+aabb.cc00.0800 100   100   0000.0000.0000.0000.0011 0          Po1:100
+aabb.cc00.0900 100   100   0000.0000.0000.0000.0000 0          192.168.255.13
+aabb.cc00.0a00 100   100   0000.0000.0000.0000.0000 0          192.168.255.14
+```
+
+PE13で実行するとこのようになります。
+
+```
+PE13#show l2vpn evpn mac
+MAC Address    EVI   BD    ESI                      Ether Tag  Next Hop(s)
+-------------- ----- ----- ------------------------ ---------- ---------------
+aabb.cc00.0700 100   100   0000.0000.0000.0000.0011 0          192.168.255.12
+aabb.cc00.0800 100   100   0000.0000.0000.0000.0011 0          192.168.255.11
+aabb.cc00.0900 100   100   0000.0000.0000.0000.0000 0          Gi3:100
+aabb.cc00.0a00 100   100   0000.0000.0000.0000.0000 0          192.168.255.14
+```
+
+PE14で実行するとこのようになります。
+
+```
+PE14#show l2vpn evpn mac
+MAC Address    EVI   BD    ESI                      Ether Tag  Next Hop(s)
+-------------- ----- ----- ------------------------ ---------- ---------------
+aabb.cc00.0700 100   100   0000.0000.0000.0000.0011 0          192.168.255.12
+aabb.cc00.0800 100   100   0000.0000.0000.0000.0011 0          192.168.255.11
+aabb.cc00.0900 100   100   0000.0000.0000.0000.0000 0          192.168.255.13
+aabb.cc00.0a00 100   100   0000.0000.0000.0000.0000 0          Gi3:100
+```
+
+PE11とPE12で構成したESI-LAGの配下にいる2台の端末（aabb.cc00.0700とaabb.cc00.0800）は、PE11とPE12で分散されています。
+
+<br>
+
+### ESIの情報を確認します
+
+`show l2vpn evpn ethernet-segment detail`
+
+PE11での実行例です（ESIを明示的に定義しているのはPE11とPE12だけですので、PE13やPE14で実行しても何も表示されません）。
+
+```
+PE11#show l2vpn evpn ethernet-segment detail
+EVPN Ethernet Segment ID: 0000.0000.0000.0000.0011
+  Interface:              Po1
+  Redundancy mode:        all-active
+  DF election wait time:  1 seconds
+  Split Horizon label:    115
+  State:                  Ready
+  Encapsulation:          mpls
+  Ordinal:                0
+  RD:                     192.168.255.11:1
+    Export-RTs:           65000:100
+  Forwarder List:         192.168.255.11 192.168.255.12
+```
+
+Forwarder ListにPE11とPE12のアドレスが格納されています。
+
+<br>
+
+### l2vpn evpnアドレスファミリのBGPテーブルを確認します
+
+`show bgp l2vpn evpn`
+
+PE11での実行例です。分かりづらいです。
+
+```
+PE11#show bgp l2vpn evpn
+BGP table version is 238, local router ID is 192.168.255.11
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+              t secondary path, L long-lived-stale,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+Route Distinguisher: 65000:100
+ *>   [1][65000:100][00000000000000000011][0]/23
+                      ::                                 32768 ?
+Route Distinguisher: 192.168.255.11:1
+ *>   [1][192.168.255.11:1][00000000000000000011][4294967295]/23
+                      ::                                 32768 ?
+Route Distinguisher: 192.168.255.12:1
+ *>i  [1][192.168.255.12:1][00000000000000000011][4294967295]/23
+                      192.168.255.12           0    100      0 ?
+ * i                   192.168.255.12           0    100      0 ?
+Route Distinguisher: 65000:100
+ *>i  [2][65000:100][0][48][AABBCC000900][0][*]/20
+                      192.168.255.13           0    100      0 ?
+ * i                   192.168.255.13           0    100      0 ?
+ *>i  [2][65000:100][0][48][AABBCC000A00][0][*]/20
+                      192.168.255.14           0    100      0 ?
+ * i                   192.168.255.14           0    100      0 ?
+ *>   [3][65000:100][0][32][192.168.255.11]/17
+                      ::                                 32768 ?
+ * i  [3][65000:100][0][32][192.168.255.12]/17
+                      192.168.255.12           0    100      0 ?
+ *>i                   192.168.255.12           0    100      0 ?
+ *>i  [3][65000:100][0][32][192.168.255.13]/17
+                      192.168.255.13           0    100      0 ?
+ * i                   192.168.255.13           0    100      0 ?
+ *>i  [3][65000:100][0][32][192.168.255.14]/17
+                      192.168.255.14           0    100      0 ?
+ * i                   192.168.255.14           0    100      0 ?
+Route Distinguisher: 192.168.255.11:17
+ *>   [4][192.168.255.11:17][00000000000000000011][32][192.168.255.11]/23
+                      ::                                 32768 ?
+Route Distinguisher: 192.168.255.12:17
+ *>i  [4][192.168.255.12:17][00000000000000000011][32][192.168.255.12]/23
+                      192.168.255.12           0    100      0 ?
+ * i                   192.168.255.12           0    100      0 ?
+```
