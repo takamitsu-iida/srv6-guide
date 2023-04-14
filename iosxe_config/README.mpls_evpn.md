@@ -470,14 +470,21 @@ PE11からPE13の **ループバック** 192.168.255.13 にpingしてみます�
 
 ![設計パラメータ](img/evpn.parameters.drawio.png)
 
+設計パラメータを考えるときに、ルータの中に作成するブリッジドメインに注目するとわかりやすいと思います。
+アップリンク側はSR-MPLSのコア側を、ダウンリンクは自装置のインタフェースになるようなブリッジを作ることを意識すると、設計パラメータの繋がりが見えてきます。
+
 <br>
 
 ### EVPNを有効にします
 
 l2vpn evpnセクションでEVPNに共通の動作を指定します。
+evpnのインスタンスは複数作成できるのですが、共通の設計パラメータはなるべく集めた方が短い設定になります。
+
+全てのPEルータ共通で以下を設定します。
 
 ```
 l2vpn evpn
+ logging peer state
  replication-type ingress
  mpls label mode per-ce
  router-id Loopback0
@@ -533,6 +540,7 @@ bridge-domain 100
 bridge-domain 100の100は装置内でユニークであれば何番でも構いません。
 
 ブリッジドメインからみると、ダウンリンク側として自装置のどのポートがブリッジに参加するか、そしてアップリンク側としてどのEVIがそのブリッジに参加するか、を指定することになります。
+
 ここではまずアップリンク側のEVIをメンバーとして指定しています。
 
 <br>
@@ -541,7 +549,7 @@ bridge-domain 100の100は装置内でユニークであれば何番でも構い
 
 ESIはEVPNに参加するイーサネットを識別するものです。
 
-シングル構成であれば明示的に設定する必要はなく、自動採番で構いません。
+シングル構成であれば明示的に設定する必要はありません。
 
 マルチホーム接続の場合にはESIを適切に設定することで異なるPE装置間で同一のLANを形成することができます。
 
@@ -550,14 +558,13 @@ ESIはEVPNに参加するイーサネットを識別するものです。
 
 ### CE向け物理ポートの設定
 
-
 > 注意
 >
 > ESI-LAGを組むときには、対向装置はLACPをサポートしたものでなければいけません。ここではNexus9000vを利用しています。
 
 PE11とPE12はポートチャネルを作成して、その中に流れるVLANをブリッジドメインに参加させます。
 
-PE13とPE14は物理ポートをブリッジドメインに参加させます。
+PE13とPE14は物理ポートの中に流れるVLANをブリッジドメインに参加させます。
 
 PE11の設定
 
@@ -607,9 +614,8 @@ interface Port-channel1
 interface GigabitEthernet3
  no ip address
  negotiation auto
- no mop enabled
- no mop sysid
  channel-group 1 mode active
+!
 
 !
 bridge-domain 100
@@ -625,9 +631,11 @@ Port-channel直下のこの設定がESIを定義したものです。
   identifier type 0 00.00.00.00.00.00.00.00.11
 ```
 
-100という数字は特に意味を持っていないと思います（Port-channel直下には一つしか定義できません）。
-ESIをtype 0で指定する場合は9バイトの文字列です。
-ここではPE11とPE12共に下1オクテットを11としています。
+evpn ethernet-segment 100の100は装置内でユニークであればなんでもよいと思います。
+Port-channel直下には一つしか定義できませんので、他のPort-channelで使うESIと重複しない番号であれば何でもよいでしょう。
+ESI(identifier)をtype 0で指定する場合は9バイトの文字列です。type 3で指定する場合はMACアドレスの形式です。
+
+ここではPE11とPE12共にtype 0で指定し、下1オクテットを11としています。
 
 PE13とPE14の設定はこうなります。
 
@@ -646,9 +654,7 @@ bridge-domain 100
 !
 ```
 
-bridge-domainの設定で、ダウンリンク側はGig3の中のservice-instance 100を、アップリンク側はevi 100を指定しています。
-
-ここでは設定していませんが、VLANタグを付けたり、VLAN番号を変換することもできます。
+ここでは設定していませんが、service instanceの設定でVLANタグを付けたり、番号を変換することもできます。
 
 <br>
 
@@ -656,9 +662,13 @@ bridge-domainの設定で、ダウンリンク側はGig3の中のservice-instanc
 
 PE同士でiBGP接続し、MAC学習テーブルの情報を交換します。
 
-フルメッシュでの設定を回避するために、CR1とCR2をルートリフレクタとします。
+フルメッシュでの設定作業を軽減するために、CR1とCR2をルートリフレクタとします。
 
-PE11, PE12, PE13, PE14共通設定(PE_NUMBERのところに11, 12, 13, 14を代入)
+PE11, PE12, PE13, PE14共通設定
+
+> 注意
+>
+> {{ PE_NUMBER }}のところには装置のループバックアドレスになるように11, 12, 13, 14を代入します
 
 ```
 !
@@ -885,12 +895,320 @@ MACアドレスだけでなくIPv4アドレスも出てくるのはどういう�
 
 ### L2SWのLACPの状態を確認します
 
+`show lacp neighbor`
+
+Nexus9000vでの実行例
+
+```
+L2SW# show lacp neighbor
+Flags:  S - Device is sending Slow LACPDUs F - Device is sending Fast LACPDUs
+        A - Device is in Active mode       P - Device is in Passive mode
+port-channel1 neighbors
+Partner's information
+            Partner                Partner                     Partner
+Port        System ID              Port Number     Age         Flags
+Eth1/1      32768,0-0-0-0-0-11     0x1             75154       SA
+
+            LACP Partner           Partner                     Partner
+            Port Priority          Oper Key                    Port State
+            32768                  0x1                         0x3d
+
+Partner's information
+            Partner                Partner                     Partner
+Port        System ID              Port Number     Age         Flags
+Eth1/2      32768,0-0-0-0-0-11     0x1             75209       SA
+
+            LACP Partner           Partner                     Partner
+            Port Priority          Oper Key                    Port State
+            32768                  0x1                         0x3d
+```
 
 <br>
 
 ### （障害検証）L2SWで片系のインタフェースを閉塞して状態を確認します
 
+L2SWでe1/1を閉塞します。
+
+```
+L2SW(config-if)# shutdown
+```
+
+PE11配下のCE装置から残り3台のCEにpingしてみます。
+
+```
+CE111#ping 10.0.0.112
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.112, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 5/8/14 ms
+CE111#ping 10.0.0.113
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.113, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 8/11/17 ms
+CE111#ping 10.0.0.114
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.114, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/11/18 ms
+CE111#
+```
+
+通信は復旧しています。
+
+このときPE11にはこのようなログが表示されます。
+
+Gig3がダウンしたことでPort-channel1も閉塞しています。
+
+```
+PE11#
+Apr 14 05:06:06.653: %EC-5-MINLINKS_NOTMET: Port-channel Port-channel1 is down bundled ports (0) doesn't meet min-links
+Apr 14 05:06:06.660: GigabitEthernet3 taken out of port-channel1
+
+Apr 14 05:06:08.661: %LINK-3-UPDOWN: Interface Port-channel1, changed state to down
+Apr 14 05:06:09.661: %LINEPROTO-5-UPDOWN: Line protocol on Interface Port-channel1, changed state to down
+```
+
+同時にPE12, PE13, PE14は次のようなログが表示されます。
+
+```
+PE13#
+Apr 14 05:06:06.678: %EVPN-5-PEER_STATUS: Peer 192.168.255.11 (global) is DOWN
+Apr 14 05:06:08.695: %EVPN-5-PEER_STATUS: Peer 192.168.255.11 (EVI 100, BD 100) is DOWN
+```
+
+PE11がEVPNのピアから抜けたと表示されます。
+
+`show l2vpn evpn peer` で確認してみると、確かにPE11がいなくなっています。
+
+```
+PE13#show l2vpn evpn peer
+
+EVI    BD    Peer-IP                   Num routes UP time
+------ ----- ------------------------  ---------- --------
+Global N/A   192.168.255.12            1          21:10:24
+100    100   192.168.255.12            4          21:10:22
+100    100   192.168.255.14            2          22:12:27
+```
+
+このことから **ダウンリンクのポートが全てダウンするとEVPNから抜ける** ことが分かります。
 
 <br>
 
 ### （障害検証）閉塞を解除します
+
+L2SWでe1/1の閉塞を解除します。
+
+```
+L2SW(config-if)# no shutdown
+```
+
+PE11は次のようなログが表示されます。
+
+物理ポートがリンクアップアップしたことでPort-channel1がアップしています。
+
+```
+Apr 14 05:16:37.580: %EC-5-MINLINKS_MET: Port-channel Port-channel1 is up as its bundled ports (1) meets min-links
+Apr 14 05:16:37.585: GigabitEthernet3 added as member-1 to port-channel1
+
+Apr 14 05:16:39.585: %LINK-3-UPDOWN: Interface Port-channel1, changed state to up
+Apr 14 05:16:40.585: %LINEPROTO-5-UPDOWN: Line protocol on Interface Port-channel1, changed state to up
+```
+
+それと同時にPE12, PE13, PE14には次のようなログが表示されます。
+
+```
+PE13#
+Apr 14 05:16:37.598: %EVPN-5-PEER_STATUS: Peer 192.168.255.11 (global) is UP
+Apr 14 05:16:39.619: %EVPN-5-PEER_STATUS: Peer 192.168.255.11 (EVI 100, BD 100) is UP
+```
+
+PE11がEVPNに組み込まれたことがわかります。
+
+
+<br><br>
+
+## 設計ミスをするとどうなる？
+
+<br>
+
+### LACPのデバイスID不一致
+
+PE11とPE12で組んでいるESI-LAGに注目します。
+
+L2SWからみると、PE11とPE12で異なる装置につながっているわけですが、LACPとしては同じ装置に見えています。
+
+PE11とPE12共に同じdevice-idを設定しているためです。
+
+```
+!
+interface Port-channel1
+ lacp device-id 0000.0000.0011
+!
+```
+
+あえてPE12で異なるdevice-idを設定してみます。
+
+```
+PE12(config)#int po 1
+PE12(config-if)#lacp device-id 0000.0000.0012
+```
+
+設定した瞬間に、PE12ではこのようなログが出ます。
+
+```
+Apr 14 05:25:45.568: %EC-5-MINLINKS_NOTMET: Port-channel Port-channel1 is down bundled ports (0) doesn't meet min-linkse
+Apr 14 05:25:45.573: GigabitEthernet3 taken out of port-channel1
+
+Apr 14 05:25:47.575: %LINK-3-UPDOWN: Interface Port-channel1, changed state to down
+Apr 14 05:25:48.576: %LINEPROTO-5-UPDOWN: Line protocol on Interface Port-channel1, changed state to down
+```
+
+LACPのdevice-idを変えただけなのに、Port-channel1がダウンしてしまいました。
+
+PE12のブリッジドメインからするとPort-channel1は唯一のダウンリンクなので、それが落ちるとEVPNから抜けてしまいます。
+
+他のPE装置にはこのようなログが表示されます。
+
+```
+PE11#
+Apr 14 05:25:45.593: %EVPN-5-PEER_STATUS: Peer 192.168.255.12 (global) is DOWN
+Apr 14 05:25:47.605: %EVPN-5-PEER_STATUS: Peer 192.168.255.12 (EVI 100, BD 100) is DOWN
+```
+
+L2SWからみても、PE12向けの物理ポートはダウン（サスペンド）状態になります。
+
+```
+L2SW# show int e 1/2
+Ethernet1/2 is down (suspended)
+admin state is up, Dedicated Interface
+  Belongs to Po1
+```
+
+PE12でLACPのdevice-idを元の設定に戻せば、即時で復旧します。
+
+結論: **ESI-LAGを組むときは、必ずLACP device-idを一致させること**
+
+
+<br>
+
+### ESIの不一致
+
+PE11とPE12でESI-LAGを組んでいますが、同じイーサネットに繋がってることを明示するために同じESIを設定します。
+
+Port-channel直下に次のように設定しています。
+
+```
+!
+interface Port-channel1
+ evpn ethernet-segment 100
+  identifier type 0 00.00.00.00.00.00.00.00.11
+!
+```
+
+あえてPE12で異なるESIを設定してみます。
+
+```
+PE12(config)#int po 1
+PE12(config-if)#evpn ethernet-segment 100
+PE12(config-if-evpn-es)#identifier type 0 00.00.00.00.00.00.00.00.22
+```
+
+設定してもログは何も出ません。
+
+ですが、PE11で `show l2vpn evpn ethernet-segment detail` を表示すると、Forwarder ListからPE12がいなくなっていることが分かります。
+
+```
+PE11#show l2vpn evpn ethernet-segment detail
+EVPN Ethernet Segment ID: 0000.0000.0000.0000.0011
+  Interface:              Po1
+  Redundancy mode:        all-active
+  DF election wait time:  1 seconds
+  Split Horizon label:    115
+  State:                  Ready
+  Encapsulation:          mpls
+  Ordinal:                0
+  RD:                     192.168.255.11:1
+    Export-RTs:           65000:100
+  Forwarder List:         192.168.255.11
+```
+
+この状態でCEから通信すると、高頻度でパケットロスが発生します。
+
+```
+CE111#ping 10.0.0.113 repeat 100
+Type escape sequence to abort.
+Sending 100, 100-byte ICMP Echos to 10.0.0.113, timeout is 2 seconds:
+!!!!!.!!!!!!.!!!!!!!!..!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Success rate is 96 percent (96/100), round-trip min/avg/max = 6/9/30 ms
+CE111#
+```
+
+これはよろしくないです。
+
+間欠的にパケットロスが発生する事象は障害の発生への気づきが遅れるリスクをはらんでますし、トラブルシューティングが難しくなります。
+
+L2SWの状態は
+- 物理インタフェースはアップ
+- Port-channelはアップ
+- LACPネイバーは異常なし
+となりますので、CE側装置にはまったく影響がでていません。
+
+他のPE装置からみるとピアは正常に見えます。
+
+```
+PE14#show l2vpn evpn peers
+
+EVI    BD    Peer-IP                   Num routes UP time
+------ ----- ------------------------  ---------- --------
+Global N/A   192.168.255.11            1          00:31:02
+Global N/A   192.168.255.12            1          00:14:39
+100    100   192.168.255.11            3          00:31:00
+100    100   192.168.255.12            2          00:14:37
+100    100   192.168.255.13            2          22:47:05
+```
+
+CEルータからpingを打ち続けていると、しばらくしてこのようなログがPE12に表示されます。
+
+```
+Apr 14 05:49:31.747: %EVPN-3-DUP_MAC: Duplicate MAC address aabb.cc00.0700 EVI 100 BD 100 detected on Po1:100 and 192.168.255.11
+```
+
+MACアドレスが重複したことを検知しています。CEルータは自分のダウンリンクであるPort-channel1にもいるし、PE11経由で回ってくる経路もあり、結果的に重複することになります。
+
+これによりPE12は当該CEルータのMAC情報を削除しますので、これがでれば通信が安定します。
+
+```
+CE111#ping 10.0.0.114 repeat 100
+Type escape sequence to abort.
+Sending 100, 100-byte ICMP Echos to 10.0.0.114, timeout is 2 seconds:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Success rate is 100 percent (100/100), round-trip min/avg/max = 6/7/20 ms
+```
+
+ですが、PE11しか通信に使われませんので、負荷分散は期待できません。
+
+結論: **ESI-LAG環境でESIが不一致になると、間欠的なパケロスとMACアドレス重複が発生する**
+
+なお、もとの設定に戻せば即時でESIのForwarder Listに登場して復旧します。
+
+
+<br><br><br>
+
+# 設定
+
+[CR1](config_evpn/5_CR1.txt)
+
+[CR2](config_evpn/6_CR2.txt)
+
+[PE11](config_evpn/1_PE11.txt)
+
+[PE12](config_evpn/2_PE12.txt)
+
+[PE13](config_evpn/3_CE13.txt)
+
+[PE14](config_evpn/4_CE14.txt)
+
+[L2SW](config_evpn/15_NXOS.txt)

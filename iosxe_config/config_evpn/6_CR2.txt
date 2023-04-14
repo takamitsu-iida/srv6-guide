@@ -1,0 +1,353 @@
+!
+! Last configuration change at 19:13:56 JST Thu Apr 13 2023
+! NVRAM config last updated at 19:13:57 JST Thu Apr 13 2023
+!
+version 17.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service call-home
+platform qfp utilization monitor load 80
+platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname CR2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+clock timezone JST 9 0
+clock calendar-valid
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+!
+!
+!
+login on-success log
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+! 
+! 
+! 
+! 
+!
+!
+no mpls ip
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+crypto pki trustpoint TP-self-signed-2216849949
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-2216849949
+ revocation-check none
+ rsakeypair TP-self-signed-2216849949
+!
+crypto pki trustpoint SLA-TrustPoint
+ enrollment pkcs12
+ revocation-check crl
+!
+!
+crypto pki certificate chain TP-self-signed-2216849949
+ certificate self-signed 01
+  30820330 30820218 A0030201 02020101 300D0609 2A864886 F70D0101 05050030 
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 32323136 38343939 3439301E 170D3232 30363130 32323033 
+  35345A17 0D333230 36303932 32303335 345A3031 312F302D 06035504 03132649 
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D32 32313638 
+  34393934 39308201 22300D06 092A8648 86F70D01 01010500 0382010F 00308201 
+  0A028201 01009BFB 2BF532DC 9357C286 4B16A0EC 3CADF70C D683D863 FA7B7196 
+  22621627 BA50A364 B43F2DB4 0F354E58 827BB021 551F4A43 377A53CF 7DA09F31 
+  3C52DDC9 898F27FE 900A1C82 E8E8456B 99872D44 A22F16B4 E90B4B10 A3A49C86 
+  72B7CB4C CE97EFB1 C404E880 242EA9FA C3DEC93A 7F138E84 78D6ADB0 1B8055EB 
+  C383D8A2 C2C1CDA8 E302639A A6F99FF3 90AC12AC 6322F0A3 BFA49670 B97BB2BD 
+  340FC8D5 1665086C 71829FD5 D9DA1AED E4C5EB6E 73392B1A 3A200E77 33267A0C 
+  BE158ED5 1078E7A5 09B32596 E2B7B3A6 69CAE8E1 CC8737EC E8166CC3 35153A71 
+  2BC17A6A 06BF6ECB F8319A5F A120AF60 E8047DCC 7FAC70B1 4BC60912 393D9471 
+  FB21BABE 01E90203 010001A3 53305130 0F060355 1D130101 FF040530 030101FF 
+  301F0603 551D2304 18301680 14A97C86 F1612326 90B2C26A C7B1A07E 5912070A 
+  17301D06 03551D0E 04160414 A97C86F1 61232690 B2C26AC7 B1A07E59 12070A17 
+  300D0609 2A864886 F70D0101 05050003 82010100 5059D917 6E99129A 402FFDCD 
+  C9160464 E20770EB AE31C115 EACAED55 BE44CB93 2C8F1301 3252CDFC 9109C8F8 
+  8ADD246E 94E69622 FD5A993C A13D1E37 CF082EC3 D5D008EE 3CB9C99D 2C12B200 
+  550B3DC5 343AE66A 9D61EDDE FE8344C6 50E42BE7 302B3841 19D0EEC8 C8591425 
+  EA15B2D6 45FD65E1 A4231EDE 20DC5BE9 29DA99FF C03E658D 287026C2 8C9B8A04 
+  0341095D EE1E7422 BE4461AF 374B4198 64E5FD93 E581C677 E8558690 9DD39598 
+  F7682699 0E038395 1071D9C5 21B222A6 E9E3AB9C B4AB5BF1 D04B2D5A 093E9A13 
+  DA1D7A2A 1CDAD9BC 08445F8E EEA629D9 42F49F8D AB641F3D A21E8E52 E2300B1F 
+  3FB0F008 81CA1EC1 C114C213 60D6C4FC F72945DB
+  quit
+crypto pki certificate chain SLA-TrustPoint
+ certificate ca 01
+  30820321 30820209 A0030201 02020101 300D0609 2A864886 F70D0101 0B050030 
+  32310E30 0C060355 040A1305 43697363 6F312030 1E060355 04031317 43697363 
+  6F204C69 63656E73 696E6720 526F6F74 20434130 1E170D31 33303533 30313934 
+  3834375A 170D3338 30353330 31393438 34375A30 32310E30 0C060355 040A1305 
+  43697363 6F312030 1E060355 04031317 43697363 6F204C69 63656E73 696E6720 
+  526F6F74 20434130 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 
+  82010A02 82010100 A6BCBD96 131E05F7 145EA72C 2CD686E6 17222EA1 F1EFF64D 
+  CBB4C798 212AA147 C655D8D7 9471380D 8711441E 1AAF071A 9CAE6388 8A38E520 
+  1C394D78 462EF239 C659F715 B98C0A59 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE 
+  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96 6FA68957 A2617DE7 104FDC5F EA2956AC 
+  7390A3EB 2B5436AD C847A2C5 DAB553EB 69A9A535 58E9F3E3 C0BD23CF 58BD7188 
+  68E69491 20F320E7 948E71D7 AE3BCC84 F10684C7 4BC8E00F 539BA42B 42C68BB7 
+  C7479096 B4CB2D62 EA2F505D C7B062A4 6811D95B E8250FC4 5D5D5FB8 8F27D191 
+  C55F0D76 61F9A4CD 3D992327 A8BB03BD 4E6D7069 7CBADF8B DF5F4368 95135E44 
+  DFC7C6CF 04DD7FD1 02030100 01A34230 40300E06 03551D0F 0101FF04 04030201 
+  06300F06 03551D13 0101FF04 05300301 01FF301D 0603551D 0E041604 1449DC85 
+  4B3D31E5 1B3E6A17 606AF333 3D3B4C73 E8300D06 092A8648 86F70D01 010B0500 
+  03820101 00507F24 D3932A66 86025D9F E838AE5C 6D4DF6B0 49631C78 240DA905 
+  604EDCDE FF4FED2B 77FC460E CD636FDB DD44681E 3A5673AB 9093D3B1 6C9E3D8B 
+  D98987BF E40CBD9E 1AECA0C2 2189BB5C 8FA85686 CD98B646 5575B146 8DFC66A8 
+  467A3DF4 4D565700 6ADF0F0D CF835015 3C04FF7C 21E878AC 11BA9CD2 55A9232C 
+  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB E973DE7F 5BDDEB86 C71E3B49 1765308B 
+  5FB0DA06 B92AFE7F 494E8A9E 07B85737 F3A58BE1 1A48A229 C37C1E69 39F08678 
+  80DDCD16 D6BACECA EEBC7CF9 8428787B 35202CDC 60E4616A B623CDBD 230E3AFB 
+  418616A9 4093E049 4D10AB75 27E86F73 932E35B5 8862FDAE 0275156F 719BB2F0 
+  D697DF7F 28
+  quit
+!
+license udi pid CSR1000V sn 9VITI82EDES
+diagnostic bootup level minimal
+memory free low-watermark processor 71489
+!
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+cdp run
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+! 
+! 
+!
+!
+interface Loopback0
+ no shutdown
+ ip address 192.168.255.2 255.255.255.255
+!
+interface GigabitEthernet1
+ no shutdown
+ mtu 9000
+ ip address 192.168.211.2 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf cost 1
+ negotiation auto
+ cdp enable
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet2
+ no shutdown
+ mtu 9000
+ ip address 192.168.212.2 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf cost 2
+ negotiation auto
+ cdp enable
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet3
+ no shutdown
+ mtu 9000
+ ip address 192.168.213.2 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf cost 3
+ negotiation auto
+ cdp enable
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet4
+ no shutdown
+ mtu 9000
+ ip address 192.168.214.2 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf cost 4
+ negotiation auto
+ cdp enable
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet5
+ no shutdown
+ mtu 9000
+ ip address 192.168.21.2 255.255.255.0
+ ip mtu 8986
+ ip ospf network point-to-point
+ negotiation auto
+ cdp enable
+ no mop enabled
+ no mop sysid
+!
+!
+segment-routing mpls
+ !
+ set-attributes
+  address-family ipv4
+   sr-label-preferred
+   explicit-null
+  exit-address-family
+ !
+ global-block 20000 29999
+ !
+ connected-prefix-sid-map
+  address-family ipv4
+   192.168.255.2/32 index 2 range 1 
+  exit-address-family
+ !
+!
+router ospf 1
+ router-id 192.168.255.2
+ nsf ietf
+ segment-routing mpls
+ network 192.168.21.2 0.0.0.0 area 0
+ network 192.168.211.2 0.0.0.0 area 0
+ network 192.168.212.2 0.0.0.0 area 0
+ network 192.168.213.2 0.0.0.0 area 0
+ network 192.168.214.2 0.0.0.0 area 0
+ network 192.168.255.2 0.0.0.0 area 0
+ bfd all-interfaces
+!
+router bgp 65000
+ bgp router-id 192.168.255.2
+ bgp cluster-id 0.0.0.1
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ neighbor 192.168.255.1 remote-as 65000
+ neighbor 192.168.255.1 update-source Loopback0
+ neighbor 192.168.255.11 remote-as 65000
+ neighbor 192.168.255.11 update-source Loopback0
+ neighbor 192.168.255.12 remote-as 65000
+ neighbor 192.168.255.12 update-source Loopback0
+ neighbor 192.168.255.13 remote-as 65000
+ neighbor 192.168.255.13 update-source Loopback0
+ neighbor 192.168.255.14 remote-as 65000
+ neighbor 192.168.255.14 update-source Loopback0
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family vpnv4
+  neighbor 192.168.255.1 activate
+  neighbor 192.168.255.1 send-community extended
+  neighbor 192.168.255.11 activate
+  neighbor 192.168.255.11 send-community extended
+  neighbor 192.168.255.11 route-reflector-client
+  neighbor 192.168.255.12 activate
+  neighbor 192.168.255.12 send-community extended
+  neighbor 192.168.255.12 route-reflector-client
+  neighbor 192.168.255.13 activate
+  neighbor 192.168.255.13 send-community extended
+  neighbor 192.168.255.13 route-reflector-client
+  neighbor 192.168.255.14 activate
+  neighbor 192.168.255.14 send-community extended
+  neighbor 192.168.255.14 route-reflector-client
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  neighbor 192.168.255.1 activate
+  neighbor 192.168.255.1 send-community both
+  neighbor 192.168.255.11 activate
+  neighbor 192.168.255.11 send-community both
+  neighbor 192.168.255.11 route-reflector-client
+  neighbor 192.168.255.12 activate
+  neighbor 192.168.255.12 send-community both
+  neighbor 192.168.255.12 route-reflector-client
+  neighbor 192.168.255.13 activate
+  neighbor 192.168.255.13 send-community both
+  neighbor 192.168.255.13 route-reflector-client
+  neighbor 192.168.255.14 activate
+  neighbor 192.168.255.14 send-community both
+  neighbor 192.168.255.14 route-reflector-client
+ exit-address-family
+!
+ip forward-protocol nd
+ip http server
+ip http authentication local
+ip http secure-server
+!
+!
+!
+!
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+line con 0
+ privilege level 15
+ stopbits 1
+line vty 0 4
+ login
+ transport input ssh
+!
+call-home
+ ! If contact email address in call-home is configured as sch-smart-licensing@cisco.com
+ ! the email address configured in Cisco Smart License Portal will be used as contact email address to send SCH notifications.
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+ntp source Loopback0
+ntp master 2
+ntp peer 192.168.255.1
+!
+!
+!
+!
+!
+end

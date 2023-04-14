@@ -31,6 +31,20 @@ SRv6の応用範囲は広いにもかかわらず一般的な企業ネットワ�
 # [Linux FRR設定例](frr_config/README.md)
 
 
+<br><br><br><br>
+
+> 参考
+>
+> XRv9000はEVPNをサポートしていません（2023年4月時点）。
+
+<br>
+
+> 参考
+>
+> CSR1000vはSRv6をサポートしていません（2023年4月時点）。
+
+# [参考・CSR1000v SR-MPLS EVPN設定例](iosxe_config/README.mpls_evpn.md)
+
 
 <!--
 GoBMP
