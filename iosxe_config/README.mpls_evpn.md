@@ -1207,8 +1207,8 @@ Success rate is 100 percent (100/100), round-trip min/avg/max = 6/7/20 ms
 
 [PE12](config_evpn/2_PE12.txt)
 
-[PE13](config_evpn/3_CE13.txt)
+[PE13](config_evpn/3_PE13.txt)
 
-[PE14](config_evpn/4_CE14.txt)
+[PE14](config_evpn/4_PE14.txt)
 
 [L2SW](config_evpn/15_NXOS.txt)
