@@ -355,6 +355,8 @@ segment-routing mpls
 - ノードSIDを固定的に設定しました
 - OSPFをSR-MPLS対応に設定しました
 
+<br>
+
 ### グローバルブロックを確認します
 
 `show segment-routing mpls gb`
