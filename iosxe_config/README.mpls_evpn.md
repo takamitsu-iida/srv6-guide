@@ -1494,12 +1494,15 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 7/9/15 ms
 CE111#
 ```
 
-EVPN上の端末から、L3VPNの先にいるCEルータに疎通できました。
+PE11配下のEVPN上の端末から、L3VPNの先にいるCEルータに疎通できました。
 
-ただし、Distributed Anycast Gatewayは万能というわけではなく、DAGを設定したPEの先に接続できません。
+ただし、Distributed Anycast Gatewayは万能というわけではなく、DAGを設定したPEの先にしか接続できません。
 
-PE装置で自分から自分に戻るような結線をしてあげて、EVPNとL3VPNを相互接続した方がよいかもしれません。
+- DAGが設定されたPE配下にいる場合はEVPNとL3VPNのどっちにもいけます
+- DAGが設定されていないPE配下にいる場合は、自分の属しているVPNと、DAGの先にいけます
 
+
+使い勝手の観点でいうと、PE装置で自分から自分に戻るような結線をしてあげて、EVPNとL3VPNを相互接続した方が便利です。
 
 <br><br><br>
 
