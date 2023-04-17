@@ -1499,3 +1499,17 @@ EVPN上の端末から、L3VPNの先にいるCEルータに疎通できました
 Distributed Anycast Gatewayは相互接続対象のEVPNとL3VPNが共存する全てのPEに必要です。
 
 EVPNの情報とL3VPNの情報を混ぜることができるのは、両者を収容しているPEだけだからです。
+
+
+
+<br><br><br>
+
+# Distributed Anycast Gatewayの設定
+
+[PE11](config_evpn/DAG_PE11.txt)
+
+[PE12](config_evpn/DAG_PE12.txt)
+
+[PE13](config_evpn/DAG_PE13.txt)
+
+[PE14](config_evpn/DAG_PE14.txt)
