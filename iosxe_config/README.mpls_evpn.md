@@ -1197,7 +1197,7 @@ Success rate is 100 percent (100/100), round-trip min/avg/max = 6/7/20 ms
 
 <br><br><br>
 
-# 設定
+# EVPN over SR-MPLSの設定
 
 [CR1](config_evpn/5_CR1.txt)
 
@@ -1212,3 +1212,290 @@ Success rate is 100 percent (100/100), round-trip min/avg/max = 6/7/20 ms
 [PE14](config_evpn/4_PE14.txt)
 
 [L2SW](config_evpn/15_NXOS.txt)
+
+
+<br><br><br>
+
+# EVPNとL3VPNの相互接続
+
+![構成](img/mpls_l3vpn.drawio.png)
+
+
+<br><br>
+
+## L3VPNを追加
+
+PE11とPE12にL3VPNを追加します。
+
+PE11に以下の設定を追加します。
+
+```
+!
+vrf definition L3
+ rd 65000:103
+ !
+ address-family ipv4
+  route-target export 65000:103
+  route-target import 65000:103
+ exit-address-family
+!
+
+!
+interface GigabitEthernet4
+ vrf forwarding L3
+ ip address 10.0.211.1 255.255.255.0
+ negotiation auto
+!
+
+!
+router bgp 65000
+ !
+ address-family vpnv4
+  neighbor 192.168.255.1 activate
+  neighbor 192.168.255.1 send-community extended
+  neighbor 192.168.255.1 next-hop-self
+  neighbor 192.168.255.2 activate
+  neighbor 192.168.255.2 send-community extended
+  neighbor 192.168.255.2 next-hop-self
+ exit-address-family
+ !
+ address-family ipv4 vrf L3
+  redistribute connected
+ exit-address-family
+!
+```
+
+PE12の設定（CEルータ向けのインタフェースにつけるアドレスが違うだけです）。
+
+```
+!
+vrf definition L3
+ rd 65000:103
+ !
+ address-family ipv4
+  route-target export 65000:103
+  route-target import 65000:103
+ exit-address-family
+!
+
+!
+interface GigabitEthernet4
+ vrf forwarding L3
+ ip address 10.0.212.1 255.255.255.0
+ negotiation auto
+!
+
+!
+router bgp 65000
+ !
+ address-family vpnv4
+  neighbor 192.168.255.1 activate
+  neighbor 192.168.255.1 send-community extended
+  neighbor 192.168.255.1 next-hop-self
+  neighbor 192.168.255.2 activate
+  neighbor 192.168.255.2 send-community extended
+  neighbor 192.168.255.2 next-hop-self
+ exit-address-family
+ !
+ address-family ipv4 vrf L3
+  redistribute connected
+ exit-address-family
+!
+```
+
+動作を確認です。
+
+CE211からCE212に向けてpingします。
+
+```
+CE211#ping 10.0.212.212
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.212.212, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms
+```
+
+<br><br>
+
+## BDIを追加
+
+ブリッジドメイン(Bridge Domain)に接続するインタフェース(BDI: Bridge Domain Interface)を作成します。
+
+これはVLANに対するSVI(interface vlan xx)に相当すると考えるとわかりやすいです。
+
+PE11の設定
+
+bridge-domain 100に対応するインタフェースですので、BDI100というインタフェースになります。
+
+BDI100は初期状態でshutdownされていますので、no shutdownで閉塞を解除します。
+
+```
+!
+bridge-domain 100
+ member Port-channel1 service-instance 100
+ member evpn-instance 100
+!
+
+!
+interface BDI100
+ mac-address 0011.0011.0011
+ vrf forwarding L3
+ ip address 10.0.0.11 255.255.255.0
+!
+```
+
+PE12の設定
+
+設定は同じです。
+
+アドレスは重複しているわけではなく、Distributed Anycast Gatewayと呼ばれます。
+
+```
+!
+bridge-domain 100
+ member Port-channel1 service-instance 100
+ member evpn-instance 100
+!
+
+!
+interface BDI100
+ mac-address 0011.0011.0011
+ vrf forwarding L3
+ ip address 10.0.0.11 255.255.255.0
+!
+```
+
+CE111の設定
+
+EVPN上にいるCEは、出口がDistributed Anycast Gatewayになるようにスタティックルートを設定します。
+
+```
+ip route 10.0.0.0 255.0.0.0 10.0.0.11
+```
+
+動作確認してみます。
+
+EVPN上のCE111から、同じEVPN上の他のCEにpingします。
+
+これはすでに設定したEVPNですので通信できて当然です。
+
+```
+CE111#ping 10.0.0.112
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.112, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 5/9/17 ms
+
+CE111#ping 10.0.0.113
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.113, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/10/23 ms
+
+CE111#ping 10.0.0.114
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.114, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/10/15 ms
+```
+
+続いてEVPN上のCE111からPEに作成したBDIのアドレスにpingします。
+
+これも通ります。
+
+```
+CE111#ping 10.0.0.11
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.11, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 6/10/16 ms
+
+CE111#ping 10.0.0.12
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.0.12, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 6/10/15 ms
+```
+
+次にEVPN上のCE111から、L3VPN上のCEにpingします。
+
+```
+CE111#ping 10.0.212.212
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.212.212, timeout is 2 seconds:
+!.!.!
+```
+
+疎通できたり、できなかったりですね。もうひと工夫必要です。
+
+<br>
+
+### EVPNとL3VPNの情報をマージする
+
+EVPNではMACアドレス情報がaddress-family l2vpn evpnで流れています。
+
+L3VPNではaddress-family vpnv4で経路情報が流れています。
+
+この２つの情報を連動させるために、ステッチングの設定を行います。
+
+異なるアドレスファミリの情報を「つなぐ」ための指定です。
+
+```
+vrf definition L3
+ rd 65000:103
+ !
+ address-family ipv4
+  route-target export 65000:103
+  route-target import 65000:103
+  route-target export 65000:103 stitching
+  route-target import 65000:103 stitching
+ exit-address-family
+!
+```
+
+次にBGPでEVPNとL3VPNの情報を交換します。
+
+```
+!
+router bgp 65000
+ !
+ address-family vpnv4
+  import l2vpn evpn re-originate
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  import vpnv4 unicast re-originate
+ exit-address-family
+ !
+
+ !
+ address-family ipv4 vrf L3
+  advertise l2vpn evpn
+  bgp additional-paths install
+  redistribute connected
+ exit-address-family
+!
+```
+
+動作確認してみます。
+
+```
+CE111#ping 10.0.211.211
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.211.211, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/10/16 ms
+
+CE111#ping 10.0.212.212
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.0.212.212, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/9/15 ms
+CE111#
+```
+
+EVPN上の端末から、L3VPNの先にいるCEルータに疎通できました。
+
+Distributed Anycast Gatewayは相互接続対象のEVPNとL3VPNが共存する全てのPEに必要です。
+
+EVPNの情報とL3VPNの情報を混ぜることができるのは、両者を収容しているPEだけだからです。
