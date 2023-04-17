@@ -1496,19 +1496,40 @@ CE111#
 
 PE11配下のEVPN上の端末から、L3VPNの先にいるCEルータに疎通できました。
 
-ただし、Distributed Anycast Gatewayは万能というわけではなく、DAGを設定したPEの先にしか通信できません。
+ただし、Distributed Anycast Gatewayは万能というわけではなく、DAGを設定したPEの先としか通信できません。
 
 - DAGが設定されたPE配下にいる場合はEVPNとL3VPNのどっちにもいけます
+
 - DAGが設定されていないPE配下にいる場合は、自分の属しているVPNと、DAGの先にいけます
 
-使い勝手の観点でいうと、PE装置で自分から自分に戻るような結線をしてあげて、EVPNとL3VPNを相互接続した方が便利かもしれません。
+使い勝手の観点でいうと、PE装置で自分から自分に戻るような物理結線をしたうえで、EVPNとL3VPNを物理結線として相互接続した方が便利かもしれません。
 
-このあたりはもうちょっと調査が必要です。
+このあたりの制限事項はもうちょっと調査が必要ですが、少なくともドキュメント上は以下のように記載されています。
+
+#### Restrictions EVPN over MPLS
+
+> 参考
+>
+> https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/mp_l2_vpns/configuration/xe-17/mp-l2-vpns-xe-17-book/m-evpn-over-mpls.html
+
+- Only Dual-Homing (two peers) Active-Active is supported.
+
+- Only Symmetric IRB is supported. Asymmetric IRB and centralized IRB are not supported for BGP EVPN over MPLS.
+
+- Only Gateway virtual MAC address is supported.
+
+- Global VRF is not supported for MPLS IRB.
+
+- VPLS Stitching is not covered and verified for BGP EVPN over MPLS.
+
+- RT-5-only based routing is not applicable to Multi-Homing All-Active Subnets on DAGs if RT-2 is disabled. This routing is not applicable because Multi-Homing peers need RT-2 MAC-IP route for ARP/ND SYNC.
+
+- SISF security feature is not supported on Multi-Homing All-Active DAGs.
 
 
 <br><br><br>
 
-# Distributed Anycast Gatewayの設定
+# Distributed Anycast Gatewayの設定例
 
 [PE11](config_evpn/DAG_PE11.txt)
 
