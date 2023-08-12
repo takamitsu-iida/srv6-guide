@@ -77,6 +77,8 @@ Ubuntuを起動します。
 
 マシンごとに設定を変えて流し込みます。
 
+PROXY_USERNAME=とPROXY_PASSWORD=とPROXY_ADDRESS=の部分は書き換えた上で、TeraTERM上で流し込みます。
+
 ```
 HOSTNAME=Linux1
 
@@ -110,6 +112,18 @@ apt -y update
 ## 最低限必要なパッケージをインストール
 
 ターミナルのサイズが反映されていない状態でシリアルコンソールを使い続けると画面が乱れて難儀します。
+
+対策のため、~/.bashrcに以下の設定を加えます。
+
+```
+cat - << 'EOS' >> ~/.bashrc
+rsz () if [[ -t 0 ]]; then local escape r c prompt=$(printf '\e7\e[r\e[999;999H\e[6n\e8'); IFS='[;' read -sd R -p "$prompt" escape r c; stty cols $c rows $r; fi
+rsz
+EOS
+```
+
+xtermに含まれるresizeコマンドを使う方法もありますが、重たいインストール作業を伴います。
+
 resizeコマンドをインストールするためにxtermをインストールします。
 
 ```
