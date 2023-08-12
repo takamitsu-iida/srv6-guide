@@ -122,6 +122,11 @@ rsz
 EOS
 ```
 
+> 元ネタはここ
+>
+> https://wiki.archlinux.org/title/working_with_the_serial_console#Resizing_a_terminal
+
+
 xtermに含まれるresizeコマンドを使う方法もありますが、重たいインストール作業を伴います。
 
 resizeコマンドをインストールするためにxtermをインストールします。
@@ -139,7 +144,7 @@ echo 'eval `resize`' >> ~/.bashrc
 ```
 
 
-## アップグレード
+## Ubuntuのアップグレード
 
 長い時間かかりますが、インタラクティブな操作が必要なので、定期的にターミナルをチェックしなければいけません。
 
@@ -177,7 +182,7 @@ ip link set ens4 up
 ip link set ens5 up
 ip link set ens6 up
 
-cat - << EOS > /etc/netplan/00-installer-config.yaml
+cat - << 'EOS' > /etc/netplan/00-installer-config.yaml
 # This is the network config written by 'subiquity'
 network:
   ethernets:
@@ -221,7 +226,7 @@ sed -i "s/macaddress: __:__:__:__:__:e3/macaddress: ${e3mac}/" /etc/netplan/00-i
 sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="console=ttyS0,115200 console=tty0"/' /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
-cat - << EOS >> /etc/sysctl.d/99-sysctl.conf
+cat - << 'EOS' >> /etc/sysctl.d/99-sysctl.conf
 
 # IPv4 packet forwarding
 net.ipv4.ip_forward=1
@@ -301,7 +306,7 @@ mkdir -p /nic
 mkdir -p /nic/bin
 chmod 755 /nic/bin
 
-cat - << EOS > /nic/bin/create_vrf.sh
+cat - << 'EOS' > /nic/bin/create_vrf.sh
 #!/bin/sh
 
 # VRF vrfA を作成する
@@ -330,7 +335,7 @@ chown root:root /nic/bin/create_vrf.sh
 chmod 755 /nic/bin/create_vrf.sh
 /nic/bin/create_vrf.sh
 
-cat - << EOS > /etc/systemd/system/create_vrf.service
+cat - << 'EOS' > /etc/systemd/system/create_vrf.service
 [Unit]
 Description = create vrf
 After=local-fs.target networking.service
@@ -363,7 +368,7 @@ echo 100 localsid >> /etc/iproute2/rt_tables
 参照するルールを追加します。
 
 ```
-cat - << EOS > /nic/bin/create_localsid.sh
+cat - << 'EOS' > /nic/bin/create_localsid.sh
 #!/bin/sh
 
 if [ `hostname` = PE3 ]; then
@@ -388,7 +393,7 @@ chmod 755 /nic/bin/create_localsid.sh
 自動起動スクリプトを作成します。
 
 ```
-cat - << EOS > /etc/systemd/system/create_localsid.service
+cat - << 'EOS' > /etc/systemd/system/create_localsid.service
 [Unit]
 Description = create localsid
 After=local-fs.target networking.service
