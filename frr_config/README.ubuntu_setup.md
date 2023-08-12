@@ -127,13 +127,15 @@ EOS
 > https://wiki.archlinux.org/title/working_with_the_serial_console#Resizing_a_terminal
 
 
-xtermに含まれるresizeコマンドを使う方法もありますが、これは重たいインストール作業を伴いますので、上記のやり方が推奨です。
+xtermに含まれるresizeコマンドを使う方法もありますが、これは重たいインストール作業を伴いますので上記のやり方が推奨です。
+
+【参考】xtermのインストール
 
 ```
 apt -y install xterm
 ```
 
-ログインと同時にresizeコマンドが自動実行されるように設定します。
+【参考】ログインと同時にresizeコマンドを実行する方法
 
 ```
 eval `resize`
