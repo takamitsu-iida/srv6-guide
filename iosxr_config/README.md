@@ -38,3 +38,15 @@ IOS XR Version 7.8.1
 ## 参照したマニュアル
 
 https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/segment-routing/78x/b-segment-routing-cg-ncs5500-78x.html
+
+
+> IOS-XRでルーティングプロトコルを動かすときには、以下のベストプラクティスを参考にするとよいと思います。
+> （日本語版は機械翻訳調なので、英語の方も読んだ方がよいと思います）
+>
+> OSPF/IS-ISおよびBGPルーティングのためのCisco IOS XR導入のベストプラクティス
+>
+> Document ID: 1658572599091352
+>
+> https://www.cisco.com/c/ja_jp/support/docs/ios-nx-os-software/ios-xr-software/IOS-XR-Best-Practices/IOSXR-Deployment-BestPractices.html
+>
+> https://www.cisco.com/c/en/us/support/docs/ios-nx-os-software/ios-xr-software/IOS-XR-Best-Practices/IOSXR-Deployment-BestPractices.html
